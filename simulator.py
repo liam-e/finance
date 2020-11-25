@@ -3,9 +3,8 @@ import os
 
 import numpy as np
 import yfinance as yf
-from pandas_datareader import data as pdr
 
-# pd.options.mode.chained_assignment = None
+import data_loader
 
 yf.pdr_override()
 
@@ -21,15 +20,12 @@ def date_parse(d):
     return dt.datetime.strptime(d, '%Y-%m-%d')
 
 
-def simulate_ema_strategy(df, symbol, reload=False):
-    file_path = f"data/sandp500/ema_sim/{start.strftime('%Y-%m-%d')}/{symbol}.csv"
+def simulate_ema_strategy(df, symbol, market="us", reload=False):
+    df = data_loader.load_price_history(symbol, start, now, market="us", reload=reload)
 
-    if reload or not os.path.isfile(file_path):
-        df = pdr.get_data_yahoo(symbol, start, now)
-
-        df.reset_index(level=0, inplace=True)
-
-        df.to_csv(file_path, index=False, date_format="%Y-%m-%d")
+    directory = f"data/{market}/ema_sim/{start.strftime('%Y-%m-%d')}"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
     if len(df) == 0:
         return np.nan

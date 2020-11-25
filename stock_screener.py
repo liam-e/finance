@@ -53,18 +53,16 @@ def rsi(df, time_period=14):
     return rs_rating
 
 
-def screen_stock(symbol, reload=False, remove_screened=True):
+def screen_stock(symbol, market="us", reload=False, remove_screened=True):
     print(symbol)
 
     try:
-        df = data_loader.load_price_history(symbol, reload)
+        df = data_loader.load_price_history(symbol, reload=reload, market=market)
 
         if df is None:
             raise ValueError
 
-        print(df.head())
-
-        if not reload and isinstance(df.index[-1], dt.datetime) and not (
+        if not reload and len(df) > 0 and isinstance(df.index[-1], dt.datetime) and not (
                 (end_date.weekday() >= 5 and df.index[-1] >= end_date - dt.timedelta(days=3))
                 or (end_date.weekday() < 5 and df.index[-1] >= end_date - dt.timedelta(days=2))):
             df = data_loader.load_price_history(symbol, reload=True)
@@ -125,7 +123,10 @@ def screen_stock(symbol, reload=False, remove_screened=True):
     else:
         is_screened_str = "FAIL"
 
-    info_dict = data_loader.load_ticker_info(symbol, "info", reload)
+    info_dict = data_loader.load_ticker_info(symbol, type_str="info", reload=reload)
+
+    if info_dict is None:
+        info_dict = {}
 
     for key in ["longName", "sector", "dividendRate", "dividendYield", "payoutRatio"]:
         if key not in info_dict:
@@ -135,13 +136,13 @@ def screen_stock(symbol, reload=False, remove_screened=True):
         "Symbol": symbol,
         "Security": info_dict["longName"],
         "Sector": info_dict["sector"],
-        "RSI": rs_rating,
+        "RSI": np.round(rs_rating, 2),
         "Passes Mark Minervini screening": is_screened_str,
-        "Current Close": current_close,
-        "dividendRate": info_dict["dividendRate"],
-        "dividendYield": info_dict["dividendYield"],
-        "Payout Ratio": info_dict["payoutRatio"],
-        "Simulation Percent Return": simulator.simulate_ema_strategy(df, symbol, reload),
+        "Current Close": np.round(current_close, 2),
+        "dividendRate": np.round(info_dict["dividendRate"], 2),
+        "dividendYield": np.round(info_dict["dividendYield"], 4),
+        "Payout Ratio": np.round(info_dict["payoutRatio"], 4),
+        "Simulation Percent Return": simulator.simulate_ema_strategy(df, symbol, market=market, reload=reload),
         "50 Day MA": moving_average_50,
         "150 Day MA": moving_average_150,
         "200 Day MA": moving_average_200,
@@ -156,12 +157,15 @@ def screen_stock(symbol, reload=False, remove_screened=True):
     return row
 
 
-def screen_stocks(symbols, file_path, reload=False, remove_screened=True):
+def screen_stocks(symbols, market="us", reload=False, remove_screened=True):
     out_df = None
 
+    file_path = "out/sheets/nz_screened"
+
     for symbol in symbols:
-        row = screen_stock(symbol, reload, remove_screened)
+        row = screen_stock(symbol, market=market, reload=reload, remove_screened=remove_screened)
         if row:
+            print(row)
             if out_df is None:
                 out_df = pd.DataFrame(columns=list(row.keys()))
             out_df = out_df.append(row, ignore_index=True)
@@ -179,8 +183,8 @@ def screen_stocks(symbols, file_path, reload=False, remove_screened=True):
 
     out_df = out_df[cols]
 
-    out_df.to_csv(file_path, index=False, date_format="%Y-%m-%d", header=True)
-    writer = pd.ExcelWriter('.'.join(file_path.split('.')[:-1]) + ".xlsx", engine="xlsxwriter",
+    out_df.to_csv(f"{file_path}.csv", index=False, date_format="%Y-%m-%d", header=True)
+    writer = pd.ExcelWriter(f"{file_path}.xlsx", engine="xlsxwriter",
                             date_format="YYYY-MM-DD")
     out_df.to_excel(writer, sheet_name="sheet1")
     worksheet = writer.sheets["sheet1"]
