@@ -29,9 +29,6 @@ def subreddit_stock_sentiment(generate_word_cloud=False, generate_scatter_plot=F
     for submission in reddit.subreddit(subreddit).new(limit=None):
         headlines.add(submission.title)
 
-    with open(f"data/sentiment/{subreddit}_headlines.p", "rb") as f:
-        headlines = pickle.load(f)
-
     with open("data/all_symbols.p", "rb") as f:
         all_symbols = pickle.load(f)
 
