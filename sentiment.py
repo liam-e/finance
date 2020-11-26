@@ -232,6 +232,23 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
     else:
         all_df.set_index("Date", inplace=True)
 
+    sentiment_cols = [col for col in all_df.columns.values if col.endswith("sentiment")]
+
+    df2 = all_df[sentiment_cols]
+    df2.columns = [s.split("_")[0] for s in sentiment_cols]
+
+    table_html = df2.to_html()
+
+    html_before = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' \
+                  '<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />' \
+                  '<meta http-equiv="Pragma" content="no-cache" /><meta http-equiv="Expires" content="0" />' \
+                  '<title>Reddit stock sentiment</title><link rel="stylesheet" href="style.css"></head><body>'
+
+    html_after = '</body></html>'
+
+    with open("public_html/finance/index.html", "w") as f:
+        f.write(html_before + table_html + html_after)
+
     all_df.reset_index(level=0).to_csv(f"data/sentiment/{subreddit}_sentiment.csv", index=False)
 
     if generate_scatter_plot:
@@ -262,7 +279,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
 
 
 def stock_label(symbol):
-    df = data_loader.load_price_history(symbol, dt.date.today()-dt.timedelta(days=5), dt.date.today())
+    # df = data_loader.load_price_history(symbol, dt.date.today()-dt.timedelta(days=5), dt.date.today())
     # if df is not None and len(df) >= 2:
     #     print(df.tail(2))
     #     old_close = df.iloc[-2]["Adj Close"]
