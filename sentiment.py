@@ -170,7 +170,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
         plt.xlabel("Time")
         plt.ylabel("Sentiment x frequency")
         plt.legend(loc="upper left")
-        plt.savefig(f"public_html/finance/res/img/sentiment/timeseries_plots/{now.strftime(datetime_file_format)}_sentiment_timeseries_plot.png", dpi=200)
+        plt.savefig(f"public_html/finance/res/img/sentiment/timeseries_plots/{now.strftime(datetime_file_format)}_sentiment_timeseries_plot.png", dpi=100)
 
         plt.close()
         plt.clf()
@@ -198,7 +198,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
         plt.xlabel("Date")
         plt.ylabel("Sentiment x frequency")
         plt.legend(loc="upper left")
-        plt.savefig(f"public_html/finance/res/img/sentiment/daily_plots/{now.strftime(date_file_format)}_sentiment_timeseries_plot.png", dpi=200)
+        plt.savefig(f"public_html/finance/res/img/sentiment/daily_plots/{now.strftime(date_file_format)}_sentiment_timeseries_plot.png", dpi=100)
 
         plt.close()
         plt.clf()
@@ -224,7 +224,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
         plt.xlabel("Date")
         plt.ylabel("Sentiment x frequency")
         plt.legend(loc="upper left")
-        plt.savefig(f"public_html/finance/res/img/sentiment/hourly_plots/{now.strftime(date_hour_file_format)}_sentiment_timeseries_plot.png", dpi=200)
+        plt.savefig(f"public_html/finance/res/img/sentiment/hourly_plots/{now.strftime(date_hour_file_format)}_sentiment_timeseries_plot.png", dpi=100)
 
         plt.close()
         plt.clf()
@@ -255,7 +255,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
         plt.xlabel("frequency")
         plt.ylabel("sentiment score")
 
-        plt.savefig(f"public_html/finance/res/img/sentiment/scatter_plots/{now.strftime(datetime_file_format)}_sentiment_scatter_plot.png", dpi=200)
+        plt.savefig(f"public_html/finance/res/img/sentiment/scatter_plots/{now.strftime(datetime_file_format)}_sentiment_scatter_plot.png", dpi=100)
 
         plt.close()
         plt.clf()
@@ -303,7 +303,7 @@ def save_image(data, filename):
     ax.set_axis_off()
     fig.add_axes(ax)
     ax.imshow(data)
-    plt.savefig(filename, dpi=200)
+    plt.savefig(filename, dpi=100)
     plt.close()
     plt.clf()
 
