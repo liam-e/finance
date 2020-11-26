@@ -1,17 +1,18 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 import datetime as dt
 import os
-import sys
 import pickle
+import re
+import sys
 from collections import Counter
 from shutil import copyfile
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import praw
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from wordcloud import WordCloud
-import numpy as np
-import re
 
 import data_loader
 
@@ -24,8 +25,7 @@ date_file_format = '%Y_%m_%d'
 regex = re.compile('[^a-zA-Z ]')
 
 
-def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, generate_scatter_plot=False, debug=False, dpi=150):
-
+def subreddit_stock_sentiment(generate_word_cloud=False, generate_scatter_plot=True, debug=False, dpi=150):
     with open("data/sentiment/auth.txt", "r") as f:
         lines = f.readlines()
         client_id = lines[0].strip()
@@ -33,7 +33,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
         username = lines[2].strip()
         subreddit = lines[3].strip()
 
-    if reload_headlines:
+    if not debug:
         print("Downloading reddit headlines...")
 
         reddit = praw.Reddit(client_id=client_id,
@@ -91,7 +91,9 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
     if generate_word_cloud:
         word_cloud = WordCloud(scale=5, max_words=200, relative_scaling=0.5,
                                normalize_plurals=False).generate_from_frequencies(symbols_dict)
-        save_image(word_cloud, f"public_html/finance/res/img/sentiment/word_clouds/{now.strftime(datetime_file_format)}_word_cloud.png", dpi=dpi)
+        save_image(word_cloud,
+                   f"public_html/finance/res/img/sentiment/word_clouds/{now.strftime(datetime_file_format)}_word_cloud.png",
+                   dpi=dpi)
 
     sentiment_dict = {}
     for symbol, frequency in symbols_dict.items():
@@ -171,9 +173,9 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
             if col.endswith("sentiment"):
                 symbol = col.split("_")[0]
                 if np.max(all_df[f"{symbol}_sentiment"]) > 0.5:
-                    plt.plot(all_df["Date"], all_df[col], label=stock_label(symbol))
+                    plt.plot(all_df["Date"], all_df[col], label=stock_label(symbol, reload=(not debug)))
 
-        plt.title("Sentiment")
+        plt.title("Reddit stock sentiment - timeseries")
         plt.xlabel("Time")
         plt.ylabel("sentiment x frequency")
         plt.legend(loc="upper left")
@@ -203,7 +205,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
                     label = f"{company_name} ({symbol.upper()})"
                     plt.plot(pd.to_datetime(df_daily["Date"]), df_daily[col], label=label)
 
-        plt.title("Daily sentiment")
+        plt.title("Reddit stock sentiment - daily")
         plt.xlabel("Date")
         plt.ylabel("sentiment x frequency")
         plt.legend(loc="upper left")
@@ -230,8 +232,8 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
                     company_name = data_loader.load_ticker_info(symbol)['shortName']
                     label = f"{company_name} ({symbol.upper()})"
                     plt.plot(pd.to_datetime(df_hourly["Date"]), df_hourly[col], label=label)
-        
-        plt.title("Hourly sentiment")
+
+        plt.title("Reddit stock sentiment - hourly")
         plt.xlabel("Date")
         plt.ylabel("sentiment x frequency)")
         plt.legend(loc="upper left")
@@ -256,7 +258,11 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
     html_before = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' \
                   '<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />' \
                   '<meta http-equiv="Pragma" content="no-cache" /><meta http-equiv="Expires" content="0" />' \
-                  '<title>Reddit stock sentiment</title><link rel="stylesheet" href="style.css"></head><body>'
+                  '<title>Reddit stock sentiment</title><link rel="stylesheet" href="style.css"></head><body>' \
+                  '<div class="imgbox"><img class="center-fit" src="res/img/sentiment/daily_plots/current_sentiment_daily_plot.png"  alt="Daily plot" /></div>' \
+                  '<div class="imgbox"><img class="center-fit" src="res/img/sentiment/hourly_plots/current_sentiment_hourly_plot.png" alt="Hourly plot" /></div>' \
+                  '<div class="imgbox"><img class="center-fit" src="res/img/sentiment/timeseries_plots/current_sentiment_timeseries_plot.png" alt="Timeseries plot" /></div>' \
+                  '<div class="imgbox"><img class="center-fit" src="res/img/sentiment/scatter_plots/current_sentiment_scatter_plot.png" alt="Scatterplot" /></div>'
 
     html_after = '</body></html>'
 
@@ -269,19 +275,27 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
 
         plt.figure(figsize=(12, 8), dpi=dpi)
 
-        df_positive = df[df["sentiment"] >= 0.3]
-        df_neutral = df[(df["sentiment"] < 0.3) & (df["sentiment"] > -0.3)]
-        df_negative = df[df["sentiment"] <= -0.3]
+        df = df[df["sentiment"] != 0]
 
-        plt.scatter(df_positive["word_frequency"], df_positive["sentiment"], marker="o", color="green")
-        plt.scatter(df_neutral["word_frequency"], df_neutral["sentiment"], marker="o", color="yellow")
-        plt.scatter(df_negative["word_frequency"], df_negative["sentiment"], marker="o", color="red")
+        df["sentiment"] = df["sentiment"] / df["word_frequency"]
+
+        df["log_word_frequency"] = np.log(df["word_frequency"])
+
+        df_positive = df[df["sentiment"] > 0]
+        # df_neutral = df[(df["sentiment"] < 0.3) & (df["sentiment"] > -0.3)]
+        df_negative = df[df["sentiment"] < 0]
+
+        plt.scatter(df_positive["log_word_frequency"], df_positive["sentiment"], marker="o", color="green")
+        # plt.scatter(df_neutral["log_word_frequency"], df_neutral["sentiment"], marker="o", color="gold")
+        plt.scatter(df_negative["log_word_frequency"], df_negative["sentiment"], marker="o", color="red")
 
         for i, row in df.iterrows():
-            plt.annotate(stock_label(row['symbol']), (row["word_frequency"], row["sentiment"]), fontsize=8)
+            plt.annotate(stock_label(row['symbol'], reload=(not debug)), (row["log_word_frequency"], row["sentiment"]),
+                         fontsize=8)
 
-        plt.xscale('log')
-        plt.yscale('log')
+        plt.title("Reddit stock sentiment scatter plot")
+        # plt.xscale('log')
+        # plt.yscale('log')
         plt.xlabel("log(frequency)")
         plt.ylabel("sentiment score")
         file_path_scatter = "public_html/finance/res/img/sentiment/scatter_plots"
@@ -294,22 +308,22 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
     print("Finished.")
 
 
-def stock_label(symbol):
-    # df = data_loader.load_price_history(symbol, dt.date.today()-dt.timedelta(days=5), dt.date.today())
-    # if df is not None and len(df) >= 2:
-    #     old_close = df.iloc[-2]["Adj Close"]
-    #     new_close = df.iloc[-1]["Adj Close"]
-    #     percent_change = (new_close - old_close) / old_close * 100
-    #
-    #     if percent_change > 0:
-    #         percent_change_str = f" +{percent_change:.2f}%"
-    #     else:
-    #         percent_change_str = f" {percent_change:.2f}%"
-    #
-    # else:
-    percent_change_str = ""
+def stock_label(symbol, reload=True):
+    df = data_loader.load_price_history(symbol, dt.date.today() - dt.timedelta(days=5), dt.date.today(), reload=reload)
+    if df is not None and len(df) >= 2:
+        old_close = df.iloc[-2]["Adj Close"]
+        new_close = df.iloc[-1]["Adj Close"]
+        percent_change = (new_close - old_close) / old_close * 100
 
-    info = data_loader.load_ticker_info(symbol)
+        if percent_change > 0:
+            percent_change_str = f" +{percent_change:.2f}%"
+        else:
+            percent_change_str = f" {percent_change:.2f}%"
+
+    else:
+        percent_change_str = ""
+
+    info = data_loader.load_ticker_info(symbol, reload=False)
     if info is not None and 'shortName' in info:
         company_name_str = f"{data_loader.load_ticker_info(symbol)['shortName']} "
     else:
@@ -341,4 +355,4 @@ def save_image(data, filename, dpi=150):
 
 
 if __name__ == "__main__":
-    subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, generate_scatter_plot=True, debug=True)
+    subreddit_stock_sentiment()

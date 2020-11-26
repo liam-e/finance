@@ -2,7 +2,7 @@ import datetime as dt
 import json
 import os
 from datetime import datetime
-
+import numpy as np
 import bs4
 import pandas as pd
 import requests
@@ -20,8 +20,11 @@ def date_parse(d):
     return datetime.strptime(d, "%Y-%m-%d")
 
 
-def load_price_history(symbol, start_date=dt.datetime(2000, 1, 1), end_date=dt.datetime.now(), market="us",
+def load_price_history(symbol, start_date=dt.date(2000, 1, 1), end_date=dt.date.today(), market="us",
                        reload=True):
+    start_date = np.datetime64(start_date)
+    end_date = np.datetime64(end_date)
+
     today = dt.datetime.now()
 
     symbol_filename = "-".join(symbol.split("."))
@@ -72,7 +75,7 @@ def load_price_history(symbol, start_date=dt.datetime(2000, 1, 1), end_date=dt.d
             return df
     else:  # don't reload
         df = pd.read_csv(file_path, index_col=0, parse_dates=True)
-        return df[(df.index >= start_date) & (df.index <= end_date)]
+        return df[(pd.to_datetime(df.index).floor('D') >= start_date) & (pd.to_datetime(df.index).floor('D') <= end_date)]
 
 
 def reload_all(symbols, start_date=dt.datetime(2000, 1, 1), end_date=dt.datetime.now()):
