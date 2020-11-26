@@ -19,7 +19,7 @@ datetime_file_format = '%Y_%m_%d_%H_%M_%S'
 date_hour_file_format = "%Y_%m_%d_%H"
 date_file_format = '%Y_%m_%d'
 
-print(now.strftime(datetime_file_format))
+# print(now.strftime(datetime_file_format))
 
 
 def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, generate_scatter_plot=False):
