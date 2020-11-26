@@ -173,6 +173,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
     plt.savefig(f"public_html/finance/res/img/sentiment/timeseries_plots/{now.strftime(datetime_file_format)}_sentiment_timeseries_plot.png", dpi=300)
     
     plt.close()
+    plt.clf()
 
     # Plot time series (daily)
     all_df.set_index("Date", inplace=True)
@@ -200,6 +201,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
     plt.savefig(f"public_html/finance/res/img/sentiment/daily_plots/{now.strftime(date_file_format)}_sentiment_timeseries_plot.png", dpi=300)
     
     plt.close()
+    plt.clf()
 
     # Plot time series (hourly)
     df_hourly = all_df.resample('H').mean()
@@ -225,6 +227,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
     plt.savefig(f"public_html/finance/res/img/sentiment/hourly_plots/{now.strftime(date_hour_file_format)}_sentiment_timeseries_plot.png", dpi=300)
     
     plt.close()
+    plt.clf()
 
     all_df.reset_index(level=0).to_csv(f"data/sentiment/{subreddit}_sentiment.csv", index=False)
 
@@ -255,6 +258,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
         plt.savefig(f"public_html/finance/res/img/sentiment/scatter_plots/{now.strftime(datetime_file_format)}_sentiment_scatter_plot.png", dpi=300)
 
         plt.close()
+        plt.clf()
 
 
 def add_words_to_remove(words_to_remove, more_words):
@@ -276,6 +280,7 @@ def save_image(data, filename):
     ax.imshow(data)
     plt.savefig(filename, dpi=300)
     plt.close()
+    plt.clf()
 
 
 if __name__ == "__main__":
