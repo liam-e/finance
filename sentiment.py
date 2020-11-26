@@ -156,78 +156,83 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
     all_df = all_df.drop("Date", 1)
     all_df.sort_values(all_df.last_valid_index(), ascending=False, axis=1, inplace=True)
     all_df["Date"] = date_col
-    plt.figure(figsize=(16, 10))
 
-    for col in all_df.columns.values:
-        if col.endswith("sentiment"):
-            symbol = col.split("_")[0]
-            if np.max(all_df[f"{symbol}_frequency"]) > 5:
-                company_name = data_loader.load_ticker_info(symbol)['shortName']
-                label = f"{company_name} ({symbol.upper()})"
-                plt.plot(all_df["Date"], all_df[col], label=label)
+    if now.hour == 18 and now.minute < 15:
+        plt.figure(figsize=(16, 10))
 
-    plt.title("Sentiment")
-    plt.xlabel("Time")
-    plt.ylabel("Sentiment x frequency")
-    plt.legend(loc="upper left")
-    plt.savefig(f"public_html/finance/res/img/sentiment/timeseries_plots/{now.strftime(datetime_file_format)}_sentiment_timeseries_plot.png", dpi=300)
-    
-    plt.close()
-    plt.clf()
+        for col in all_df.columns.values:
+            if col.endswith("sentiment"):
+                symbol = col.split("_")[0]
+                if np.max(all_df[f"{symbol}_frequency"]) > 5:
+                    company_name = data_loader.load_ticker_info(symbol)['shortName']
+                    label = f"{company_name} ({symbol.upper()})"
+                    plt.plot(all_df["Date"], all_df[col], label=label)
 
-    # Plot time series (daily)
-    all_df.set_index("Date", inplace=True)
+        plt.title("Sentiment")
+        plt.xlabel("Time")
+        plt.ylabel("Sentiment x frequency")
+        plt.legend(loc="upper left")
+        plt.savefig(f"public_html/finance/res/img/sentiment/timeseries_plots/{now.strftime(datetime_file_format)}_sentiment_timeseries_plot.png", dpi=200)
 
-    df_daily = all_df.resample('D').mean()
+        plt.close()
+        plt.clf()
 
-    df_daily.sort_values(df_daily.last_valid_index(), ascending=False, axis=1, inplace=True)
+        # Plot time series (daily)
+        all_df.set_index("Date", inplace=True)
 
-    df_daily.reset_index(level=0, inplace=True)
+        df_daily = all_df.resample('D').mean()
 
-    plt.figure(figsize=(16, 10))
+        df_daily.sort_values(df_daily.last_valid_index(), ascending=False, axis=1, inplace=True)
 
-    for col in df_daily.columns.values:
-        if col.endswith("sentiment"):
-            symbol = col.split("_")[0]
-            if np.max(df_daily[f"{symbol}_frequency"]) > 5:
-                company_name = data_loader.load_ticker_info(symbol)['shortName']
-                label = f"{company_name} ({symbol.upper()})"
-                plt.plot(pd.to_datetime(df_daily["Date"]), df_daily[col], label=label)
+        df_daily.reset_index(level=0, inplace=True)
 
-    plt.title("Daily sentiment")
-    plt.xlabel("Date")
-    plt.ylabel("Sentiment x frequency")
-    plt.legend(loc="upper left")
-    plt.savefig(f"public_html/finance/res/img/sentiment/daily_plots/{now.strftime(date_file_format)}_sentiment_timeseries_plot.png", dpi=300)
-    
-    plt.close()
-    plt.clf()
+        plt.figure(figsize=(16, 10))
 
-    # Plot time series (hourly)
-    df_hourly = all_df.resample('H').mean()
+        for col in df_daily.columns.values:
+            if col.endswith("sentiment"):
+                symbol = col.split("_")[0]
+                if np.max(df_daily[f"{symbol}_frequency"]) > 5:
+                    company_name = data_loader.load_ticker_info(symbol)['shortName']
+                    label = f"{company_name} ({symbol.upper()})"
+                    plt.plot(pd.to_datetime(df_daily["Date"]), df_daily[col], label=label)
 
-    df_hourly.sort_values(df_hourly.last_valid_index(), ascending=False, axis=1, inplace=True)
+        plt.title("Daily sentiment")
+        plt.xlabel("Date")
+        plt.ylabel("Sentiment x frequency")
+        plt.legend(loc="upper left")
+        plt.savefig(f"public_html/finance/res/img/sentiment/daily_plots/{now.strftime(date_file_format)}_sentiment_timeseries_plot.png", dpi=200)
 
-    df_hourly.reset_index(level=0, inplace=True)
+        plt.close()
+        plt.clf()
 
-    plt.figure(figsize=(16, 10))
+        # Plot time series (hourly)
+        df_hourly = all_df.resample('H').mean()
 
-    for col in df_hourly.columns.values:
-        if col.endswith("sentiment"):
-            symbol = col.split("_")[0]
-            if np.max(df_hourly[f"{symbol}_frequency"]) > 5:
-                company_name = data_loader.load_ticker_info(symbol)['shortName']
-                label = f"{company_name} ({symbol.upper()})"
-                plt.plot(pd.to_datetime(df_hourly["Date"]), df_hourly[col], label=label)
+        df_hourly.sort_values(df_hourly.last_valid_index(), ascending=False, axis=1, inplace=True)
 
-    plt.title("Hourly sentiment")
-    plt.xlabel("Date")
-    plt.ylabel("Sentiment x frequency")
-    plt.legend(loc="upper left")
-    plt.savefig(f"public_html/finance/res/img/sentiment/hourly_plots/{now.strftime(date_hour_file_format)}_sentiment_timeseries_plot.png", dpi=300)
-    
-    plt.close()
-    plt.clf()
+        df_hourly.reset_index(level=0, inplace=True)
+
+        plt.figure(figsize=(16, 10))
+
+        for col in df_hourly.columns.values:
+            if col.endswith("sentiment"):
+                symbol = col.split("_")[0]
+                if np.max(df_hourly[f"{symbol}_frequency"]) > 5:
+                    company_name = data_loader.load_ticker_info(symbol)['shortName']
+                    label = f"{company_name} ({symbol.upper()})"
+                    plt.plot(pd.to_datetime(df_hourly["Date"]), df_hourly[col], label=label)
+
+        plt.title("Hourly sentiment")
+        plt.xlabel("Date")
+        plt.ylabel("Sentiment x frequency")
+        plt.legend(loc="upper left")
+        plt.savefig(f"public_html/finance/res/img/sentiment/hourly_plots/{now.strftime(date_hour_file_format)}_sentiment_timeseries_plot.png", dpi=200)
+
+        plt.close()
+        plt.clf()
+
+    else:
+        all_df.set_index("Date", inplace=True)
 
     all_df.reset_index(level=0).to_csv(f"data/sentiment/{subreddit}_sentiment.csv", index=False)
 
@@ -255,7 +260,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
         plt.xlabel("frequency")
         plt.ylabel("sentiment score")
 
-        plt.savefig(f"public_html/finance/res/img/sentiment/scatter_plots/{now.strftime(datetime_file_format)}_sentiment_scatter_plot.png", dpi=300)
+        plt.savefig(f"public_html/finance/res/img/sentiment/scatter_plots/{now.strftime(datetime_file_format)}_sentiment_scatter_plot.png", dpi=200)
 
         plt.close()
         plt.clf()
@@ -278,10 +283,10 @@ def save_image(data, filename):
     ax.set_axis_off()
     fig.add_axes(ax)
     ax.imshow(data)
-    plt.savefig(filename, dpi=300)
+    plt.savefig(filename, dpi=200)
     plt.close()
     plt.clf()
 
 
 if __name__ == "__main__":
-    subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, generate_scatter_plot=True)
+    subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, generate_scatter_plot=False)
