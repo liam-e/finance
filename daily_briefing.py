@@ -4,9 +4,8 @@ import os
 import sys
 import pandas as pd
 
-pd.set_option('display.max_rows', 500)
-pd.set_option('display.max_columns', 15)
-pd.set_option('display.width', 150)
+import data_loader
+import ohlc
 
 os.chdir(sys.path[0])
 now = dt.datetime.now()
@@ -27,6 +26,13 @@ if __name__ == "__main__":
         sentiment_cols = [col for col in df.columns.values if col.endswith("sentiment")]
 
         df2 = df[sentiment_cols]
-        df2.columns = [s.split("_")[0] for s in sentiment_cols]
 
-        print(df2.head())
+        sentiment_symbols = [s.split("_")[0] for s in sentiment_cols]
+
+        df2.columns = sentiment_symbols
+
+        print(df2.tail())
+
+        for symbol in sentiment_symbols:
+            if df2[symbol].iloc[-1] > 0:
+                ohlc.indicator_chart(symbol, sentiment_value=df2[symbol].iloc[-1])

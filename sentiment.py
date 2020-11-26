@@ -4,6 +4,7 @@ import os
 import sys
 import pickle
 from collections import Counter
+from shutil import copyfile
 import matplotlib.pyplot as plt
 import pandas as pd
 import praw
@@ -22,7 +23,8 @@ date_file_format = '%Y_%m_%d'
 
 regex = re.compile('[^a-zA-Z ]')
 
-def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, generate_scatter_plot=False, debug=False):
+
+def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, generate_scatter_plot=False, debug=False, dpi=150):
 
     with open("data/sentiment/auth.txt", "r") as f:
         lines = f.readlines()
@@ -89,7 +91,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
     if generate_word_cloud:
         word_cloud = WordCloud(scale=5, max_words=200, relative_scaling=0.5,
                                normalize_plurals=False).generate_from_frequencies(symbols_dict)
-        save_image(word_cloud, f"public_html/finance/res/img/sentiment/word_clouds/{now.strftime(datetime_file_format)}_word_cloud.png")
+        save_image(word_cloud, f"public_html/finance/res/img/sentiment/word_clouds/{now.strftime(datetime_file_format)}_word_cloud.png", dpi=dpi)
 
     sentiment_dict = {}
     for symbol, frequency in symbols_dict.items():
@@ -119,6 +121,8 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
                 sentiment_dict[symbol]["sentiment_frequency"] += 1
                 mentioned_stocks.append(symbol)
 
+    # pprint(results)
+
     #     if sentiment_score > 0:
     #         print(f"{mentioned_stocks} - positive :) - \"{line}\"")
     #     elif sentiment_score < 0:
@@ -132,7 +136,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
 
     df = df[["symbol", "word_frequency", "sentiment"]]
 
-    df = df[df["sentiment"] != 0]
+    # df = df[df["sentiment"] != 0]
 
     file_path = f"data/sentiment/{subreddit}_sentiment.csv"
 
@@ -158,9 +162,10 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
     all_df.sort_values(all_df.last_valid_index(), ascending=False, axis=1, inplace=True)
     all_df["Date"] = date_col
 
-    if debug or (now.hour == 18 and now.minute < 15):
+    if debug or (now.hour in [0, 6, 12, 18] and now.minute < 30):
         print("Making charts...")
-        plt.figure(figsize=(12, 8))
+        # ----------- TIMESERIES CHART -----------
+        plt.figure(figsize=(12, 8), dpi=dpi)
 
         for col in all_df.columns.values:
             if col.endswith("sentiment"):
@@ -170,14 +175,16 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
 
         plt.title("Sentiment")
         plt.xlabel("Time")
-        plt.ylabel("Sentiment x frequency")
+        plt.ylabel("sentiment x frequency")
         plt.legend(loc="upper left")
-        plt.savefig(f"public_html/finance/res/img/sentiment/timeseries_plots/{now.strftime(datetime_file_format)}_sentiment_timeseries_plot.png", dpi=150)
-
+        file_path_timeseries = "public_html/finance/res/img/sentiment/timeseries_plots"
+        plt.savefig(f"{file_path_timeseries}/{now.strftime(datetime_file_format)}_sentiment_timeseries_plot.png")
+        copyfile(f"{file_path_timeseries}/{now.strftime(datetime_file_format)}_sentiment_timeseries_plot.png",
+                 f"{file_path_timeseries}/current_sentiment_timeseries_plot.png")
         plt.close()
         plt.clf()
 
-        # Plot time series (daily)
+        # ----------- DAILY CHART -----------
         all_df.set_index("Date", inplace=True)
 
         df_daily = all_df.resample('D').mean()
@@ -186,7 +193,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
 
         df_daily.reset_index(level=0, inplace=True)
 
-        plt.figure(figsize=(12, 8))
+        plt.figure(figsize=(12, 8), dpi=dpi)
 
         for col in df_daily.columns.values:
             if col.endswith("sentiment"):
@@ -198,21 +205,23 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
 
         plt.title("Daily sentiment")
         plt.xlabel("Date")
-        plt.ylabel("Sentiment x frequency")
+        plt.ylabel("sentiment x frequency")
         plt.legend(loc="upper left")
-        plt.savefig(f"public_html/finance/res/img/sentiment/daily_plots/{now.strftime(date_file_format)}_sentiment_timeseries_plot.png", dpi=150)
-
+        file_path_daily = "public_html/finance/res/img/sentiment/daily_plots"
+        plt.savefig(f"{file_path_daily}/{now.strftime(date_file_format)}_sentiment_daily_plot.png")
+        copyfile(f"{file_path_daily}/{now.strftime(date_file_format)}_sentiment_daily_plot.png",
+                 f"{file_path_daily}/current_sentiment_daily_plot.png")
         plt.close()
         plt.clf()
 
-        # Plot time series (hourly)
+        # ----------- HOURLY CHART -----------
         df_hourly = all_df.resample('H').mean()
 
         df_hourly.sort_values(df_hourly.last_valid_index(), ascending=False, axis=1, inplace=True)
 
         df_hourly.reset_index(level=0, inplace=True)
 
-        plt.figure(figsize=(12, 8))
+        plt.figure(figsize=(12, 8), dpi=dpi)
 
         for col in df_hourly.columns.values:
             if col.endswith("sentiment"):
@@ -221,12 +230,15 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
                     company_name = data_loader.load_ticker_info(symbol)['shortName']
                     label = f"{company_name} ({symbol.upper()})"
                     plt.plot(pd.to_datetime(df_hourly["Date"]), df_hourly[col], label=label)
-
+        
         plt.title("Hourly sentiment")
         plt.xlabel("Date")
-        plt.ylabel("Sentiment x frequency")
+        plt.ylabel("sentiment x frequency)")
         plt.legend(loc="upper left")
-        plt.savefig(f"public_html/finance/res/img/sentiment/hourly_plots/{now.strftime(date_hour_file_format)}_sentiment_timeseries_plot.png", dpi=150)
+        file_path_hourly = "public_html/finance/res/img/sentiment/hourly_plots"
+        plt.savefig(f"{file_path_hourly}/{now.strftime(date_hour_file_format)}_sentiment_hourly_plot.png", dpi=dpi)
+        copyfile(f"{file_path_hourly}/{now.strftime(date_hour_file_format)}_sentiment_hourly_plot.png",
+                 f"{file_path_hourly}/current_sentiment_hourly_plot.png")
 
         plt.close()
         plt.clf()
@@ -253,9 +265,9 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
 
     all_df.reset_index(level=0).to_csv(f"data/sentiment/{subreddit}_sentiment.csv", index=False)
 
-    if generate_scatter_plot and now.minute < 15:
+    if generate_scatter_plot:
 
-        plt.figure(figsize=(12, 8))
+        plt.figure(figsize=(12, 8), dpi=dpi)
 
         df_positive = df[df["sentiment"] >= 0.3]
         df_neutral = df[(df["sentiment"] < 0.3) & (df["sentiment"] > -0.3)]
@@ -270,11 +282,12 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
 
         plt.xscale('log')
         plt.yscale('log')
-
-        plt.xlabel("frequency")
+        plt.xlabel("log(frequency)")
         plt.ylabel("sentiment score")
-
-        plt.savefig(f"public_html/finance/res/img/sentiment/scatter_plots/{now.strftime(datetime_file_format)}_sentiment_scatter_plot.png", dpi=150)
+        file_path_scatter = "public_html/finance/res/img/sentiment/scatter_plots"
+        plt.savefig(f"{file_path_scatter}/{now.strftime(datetime_file_format)}_sentiment_scatter_plot.png", dpi=dpi)
+        copyfile(f"{file_path_scatter}/{now.strftime(datetime_file_format)}_sentiment_scatter_plot.png",
+                 f"{file_path_scatter}/current_sentiment_scatter_plot.png")
 
         plt.close()
         plt.clf()
@@ -284,7 +297,6 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
 def stock_label(symbol):
     # df = data_loader.load_price_history(symbol, dt.date.today()-dt.timedelta(days=5), dt.date.today())
     # if df is not None and len(df) >= 2:
-    #     print(df.tail(2))
     #     old_close = df.iloc[-2]["Adj Close"]
     #     new_close = df.iloc[-1]["Adj Close"]
     #     percent_change = (new_close - old_close) / old_close * 100
@@ -316,17 +328,17 @@ def add_words_to_remove(words_to_remove, more_words):
     return words_to_remove
 
 
-def save_image(data, filename):
+def save_image(data, filename, dpi=150):
     fig = plt.figure()
     fig.set_size_inches(16, 8)
     ax = plt.Axes(fig, [0., 0., 1., 1.])
     ax.set_axis_off()
     fig.add_axes(ax)
     ax.imshow(data)
-    plt.savefig(filename, dpi=150)
+    plt.savefig(filename, dpi=dpi)
     plt.close()
     plt.clf()
 
 
 if __name__ == "__main__":
-    subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, generate_scatter_plot=True, debug=False)
+    subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, generate_scatter_plot=True, debug=True)
