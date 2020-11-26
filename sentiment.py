@@ -10,6 +10,7 @@ import praw
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from wordcloud import WordCloud
 import numpy as np
+import re
 
 import data_loader
 
@@ -19,6 +20,7 @@ datetime_file_format = '%Y_%m_%d_%H_%M_%S'
 date_hour_file_format = "%Y_%m_%d_%H"
 date_file_format = '%Y_%m_%d'
 
+regex = re.compile('[^a-zA-Z ]')
 
 def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, generate_scatter_plot=False, debug=False):
 
@@ -30,6 +32,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
         subreddit = lines[3].strip()
 
     if reload_headlines:
+        print("Downloading reddit headlines...")
 
         reddit = praw.Reddit(client_id=client_id,
                              client_secret=client_secret,
@@ -46,6 +49,8 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
         with open("data/headlines.p", "rb") as f:
             headlines = pickle.load(f)
 
+    print("Counting words...")
+
     with open("data/all_symbols.p", "rb") as f:
         all_symbols = pickle.load(f)
 
@@ -58,17 +63,13 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
     sia = SIA()
     results = []
     word_list = []
-    chars_to_remove = [",", ".", "(", ")", "/", ":", "\"", "'", "?", "!", "$", "-", "🚀"]
 
     stripped_headlines = []
 
     for line in headlines:
-        line_stripped = line
-        for char in chars_to_remove:
-            line_stripped = line_stripped.replace(char, "").lower()
-        line_stripped = line_stripped.split(" ")
-        stripped_headlines.append(line_stripped)
-        word_list += line_stripped
+        line_list = regex.sub('', line).lower().split(" ")
+        stripped_headlines.append(line_list)
+        word_list += line_list
 
     word_freqs = Counter(word_list).most_common()
 
@@ -158,6 +159,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
     all_df["Date"] = date_col
 
     if debug or (now.hour == 18 and now.minute < 15):
+        print("Making charts...")
         plt.figure(figsize=(12, 8))
 
         for col in all_df.columns.values:
@@ -276,6 +278,7 @@ def subreddit_stock_sentiment(reload_headlines=True, generate_word_cloud=False, 
 
         plt.close()
         plt.clf()
+    print("Finished.")
 
 
 def stock_label(symbol):
