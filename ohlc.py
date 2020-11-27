@@ -4,15 +4,16 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
+from matplotlib import style
 from mplfinance.original_flavor import candlestick_ohlc
 
 import data_loader
 import sentiment
 
-plt.style.use("fivethirtyeight")
+style.use("dark_background")
 
 
-def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210), sentiment_value=None):
+def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210)):
     try:
 
         start = start - dt.timedelta(days=max(smas))
@@ -25,7 +26,7 @@ def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210
         smas = [sma for sma in smas if sma < date_delta.days / 2]
 
         fig, ax = plt.subplots()
-        fig.set_size_inches(32, 18)
+        fig.set_size_inches(20, 10)
 
         for sma in smas:
             df[f"SMA_{sma}"] = df["Adj Close"].rolling(window=sma).mean()
@@ -153,20 +154,15 @@ def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210
         plt.xlabel("Date")  # set x axis label
         plt.ylabel("Price")  # set y axis label
 
-        label = sentiment.stock_label(symbol)
-
-        if sentiment_value is not None:
-            label += f"{sentiment_value:.2f}"
-
         plt.title(sentiment.stock_label(symbol) + " - daily indicator chart")  # set title
         plt.ylim(df["Low"].min(), df["High"].max() * 1.05)  # add margins
         # plt.yscale("log")
         plt.legend(loc="upper left")
 
-        if sentiment_value is not None:
-            plt.savefig(f"out/charts/{sentiment_value:2.2f}_{symbol}_chart_indicators.png", dpi=300)
+        if symbol in ["ride", "abb"]:
+            plt.savefig(f"public_html/finance/res/img/ohlc/aaaaaaaaaaaaaaaaaaaaaa{symbol}_ohlc.png", dpi=150)
         else:
-            plt.savefig(f"out/charts/{symbol}_chart_indicators.png", dpi=300)
+            plt.savefig(f"public_html/finance/res/img/ohlc/{symbol}_ohlc.png", dpi=150)
 
         plt.close(fig)
         plt.clf()

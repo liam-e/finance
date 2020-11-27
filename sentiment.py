@@ -39,7 +39,6 @@ def subreddit_stock_sentiment(generate_word_cloud=False,
                               debug=False, dpi=150,
                               download_headlines=True,
                               generate_charts=False):
-
     logging.basicConfig(filename='main.log', filemode='w', format=log_format, datefmt=date_format, level=logging.INFO)
 
     with open("data/sentiment/auth.txt", "r") as f:

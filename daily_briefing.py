@@ -5,6 +5,7 @@ import sys
 
 import pandas as pd
 
+import generate_html
 import ohlc
 
 os.chdir(sys.path[0])
@@ -31,8 +32,13 @@ if __name__ == "__main__":
 
         df2.columns = sentiment_symbols
 
-        print(df2.tail())
+        watchlist = [symbol for symbol in ["ride", "abb"] if symbol not in sentiment_symbols]
+
+        for symbol in watchlist:
+            ohlc.indicator_chart(symbol)
 
         for symbol in sentiment_symbols:
             if df2[symbol].iloc[-1] > 0:
-                ohlc.indicator_chart(symbol, sentiment_value=df2[symbol].iloc[-1])
+                ohlc.indicator_chart(symbol)
+
+        generate_html.generate_ohlc_html(now)

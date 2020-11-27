@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 
 import bs4
-import numpy as np
 import pandas as pd
 import requests
 import yfinance as yf
@@ -21,11 +20,8 @@ def date_parse(d):
     return datetime.strptime(d, "%Y-%m-%d")
 
 
-def load_price_history(symbol, start_date=dt.date(2000, 1, 1), end_date=dt.date.today(), market="us",
+def load_price_history(symbol, start_date=dt.datetime(2000, 1, 1), end_date=dt.datetime.now(), market="us",
                        reload=True):
-    start_date = np.datetime64(start_date)
-    end_date = np.datetime64(end_date)
-
     today = dt.datetime.now()
 
     symbol_filename = "-".join(symbol.split("."))
@@ -33,7 +29,7 @@ def load_price_history(symbol, start_date=dt.date(2000, 1, 1), end_date=dt.date.
     file_path = f"data/{market}/price_history/{symbol_filename}.csv"
     if reload:
         if os.path.isfile(file_path):  # download only data from one day after latest date in csv
-            df_old = pd.read_csv(file_path, index_col=0, parse_dates=True)
+            df_old = pd.read_csv(file_path, index_col=0, parse_dates=True, date_parser=date_parse)
 
             if len(df_old) == 0:
                 df = pdr.get_data_yahoo(symbol, start_date, end_date)
