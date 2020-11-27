@@ -1,4 +1,7 @@
+#!/usr/bin/env python3
 import datetime as dt
+import os
+import sys
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -10,6 +13,8 @@ from mplfinance.original_flavor import candlestick_ohlc
 import data_loader
 import sentiment
 
+
+os.chdir(sys.path[0])
 style.use("dark_background")
 
 
