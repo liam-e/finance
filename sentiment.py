@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import datetime as dt
+import logging
 import os
 import pickle
 import re
@@ -20,9 +21,11 @@ import generate_html
 
 os.chdir(sys.path[0])
 now = dt.datetime.now()
+date_format = '%d/%m/%Y %H:%M:%S'
 datetime_file_format = '%Y_%m_%d_%H_%M_%S'
 date_hour_file_format = "%Y_%m_%d_%H"
 date_file_format = '%Y_%m_%d'
+log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
 regex = re.compile('[^a-zA-Z ]')
 
@@ -34,7 +37,10 @@ labels_dict = {}
 def subreddit_stock_sentiment(generate_word_cloud=False,
                               generate_scatter_plot=True,
                               debug=False, dpi=150,
-                              download_headlines=True):
+                              download_headlines=True,
+                              generate_charts=False):
+
+    logging.basicConfig(filename='main.log', filemode='w', format=log_format, datefmt=date_format, level=logging.INFO)
 
     with open("data/sentiment/auth.txt", "r") as f:
         lines = f.readlines()
@@ -44,7 +50,7 @@ def subreddit_stock_sentiment(generate_word_cloud=False,
         subreddit = lines[3].strip()
 
     if download_headlines:
-        print("Downloading reddit headlines...")
+        logging.info("Downloading reddit headlines...")
 
         reddit = praw.Reddit(client_id=client_id,
                              client_secret=client_secret,
@@ -61,7 +67,7 @@ def subreddit_stock_sentiment(generate_word_cloud=False,
         with open("data/headlines.p", "rb") as f:
             headlines = pickle.load(f)
 
-    print("Counting words...")
+    logging.info("Counting words...")
 
     with open("data/all_symbols.p", "rb") as f:
         all_symbols = pickle.load(f)
@@ -71,9 +77,6 @@ def subreddit_stock_sentiment(generate_word_cloud=False,
 
     # more_words = []
     # add_words_to_remove(words_to_remove, more_words)
-
-    print("k" in words_to_remove)
-    print("b" in words_to_remove)
 
     sia = SIA()
     results = []
@@ -173,8 +176,8 @@ def subreddit_stock_sentiment(generate_word_cloud=False,
     df_plot = all_df[sentiment_cols]
     df_plot.columns = [s.split("_")[0] for s in sentiment_cols]
 
-    if debug or (now.hour in [0, 6, 12, 18] and now.minute < 30):
-        print("Making charts...")
+    if debug or generate_charts or (now.hour in [0, 6, 12, 18] and now.minute < 30):
+        logging.info("Generating charts...")
 
         # ----------- TIMESERIES CHART -----------
         plot_sentiment(df_plot, "timeseries", debug=debug)
@@ -224,9 +227,10 @@ def subreddit_stock_sentiment(generate_word_cloud=False,
 
         plt.close()
         plt.clf()
+        logging.info(f"Scatter plot completed.")
 
     generate_html.generate_sentiment_html(now, debug)
-    print("Finished.")
+    logging.info("Success.")
 
 
 def plot_sentiment(df, plot_type, dpi=150, max_count=10, debug=False):
@@ -243,11 +247,11 @@ def plot_sentiment(df, plot_type, dpi=150, max_count=10, debug=False):
         df_plot = df
         df_plot = df_plot[df_plot.index >= df_plot.index[-1] - dt.timedelta(days=7)]
     else:
-        print(f"{plot_type} not supported.")
+        logging.info(f"{plot_type} not supported.")
         return
 
     if len(df) == 0:
-        print("Dataframe is empty.")
+        logging.info(f"Dataframe is empty for {plot_type} plot.")
         return
 
     df_plot = df_plot.sort_values(df_plot.last_valid_index(), ascending=False, axis=1)
@@ -277,6 +281,8 @@ def plot_sentiment(df, plot_type, dpi=150, max_count=10, debug=False):
 
     plt.close()
     plt.clf()
+
+    logging.info(f"{plot_type} plot completed.")
 
 
 def stock_label(symbol):
