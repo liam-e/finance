@@ -14,7 +14,7 @@ def generate_sentiment_html(now):
     with open("data/sentiment/html/sentiment_footer_snippet.html", "r") as f:
         footer_snippet = f.read()
 
-    last_updated = f"<p id='timestamp'>Last updated: {now.strftime('%A %d %B, %Y at %I:%M:%S %p')}</p>"
+    last_updated = f"<p id='timestamp'>Last updated: {now.strftime('%A %d %B, %Y at %I:%M:%S %p')}</p></header>"
 
     # html = header_snippet + last_updated + markdown_to_html("README.md") + footer_snippet
 

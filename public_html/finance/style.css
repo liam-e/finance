@@ -33,3 +33,7 @@ td, th {
 #timestamp {
     font-size: 0.75em;
 }
+
+header {
+    text-align: center;
+}

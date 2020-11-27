@@ -321,4 +321,4 @@ def save_image(data, filename, dpi=150):
 
 
 if __name__ == "__main__":
-    subreddit_stock_sentiment(debug=True, generate_scatter_plot=True)
+    subreddit_stock_sentiment(debug=False, generate_scatter_plot=True)
