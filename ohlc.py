@@ -164,10 +164,7 @@ def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210
         # plt.yscale("log")
         plt.legend(loc="upper left")
 
-        if symbol in ["ride", "abb"]:
-            plt.savefig(f"public_html/finance/res/img/ohlc/aaaaaaaaaaaaaaaaaaaaaa{symbol}_ohlc.png", dpi=150)
-        else:
-            plt.savefig(f"public_html/finance/res/img/ohlc/{symbol}_ohlc.png", dpi=150)
+        plt.savefig(f"public_html/finance/res/img/ohlc/{symbol}_ohlc.png", dpi=150)
 
         plt.close(fig)
         plt.clf()
