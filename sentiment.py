@@ -16,6 +16,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from wordcloud import WordCloud
 
 import data_loader
+import generate_html
 
 os.chdir(sys.path[0])
 now = dt.datetime.now()
@@ -66,6 +67,9 @@ def subreddit_stock_sentiment(generate_word_cloud=False, generate_scatter_plot=T
 
     # more_words = []
     # add_words_to_remove(words_to_remove, more_words)
+
+    print("k" in words_to_remove)
+    print("b" in words_to_remove)
 
     sia = SIA()
     results = []
@@ -210,6 +214,8 @@ def subreddit_stock_sentiment(generate_word_cloud=False, generate_scatter_plot=T
 
         plt.close()
         plt.clf()
+
+    generate_html.generate_sentiment_html(now)
     print("Finished.")
 
 
@@ -247,7 +253,7 @@ def plot_sentiment(df, plot_type, dpi=150, max_count=10):
         if count >= max_count:
             break
 
-    plt.title(f"Reddit stock sentiment - {plot_type}")
+    plt.title(f"{plot_type[0].upper()}{plot_type[1:]}")
     plt.xlabel("Date")
     plt.ylabel("log(sentiment x frequency) - higher is better")
     plt.legend(loc="upper left")
@@ -315,4 +321,4 @@ def save_image(data, filename, dpi=150):
 
 
 if __name__ == "__main__":
-    subreddit_stock_sentiment(debug=False, generate_scatter_plot=True)
+    subreddit_stock_sentiment(debug=True, generate_scatter_plot=True)

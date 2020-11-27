@@ -29,3 +29,7 @@ td, th {
     max-height: 100vh;
     margin: auto;
 }
+
+#timestamp {
+    font-size: 0.75em;
+}
