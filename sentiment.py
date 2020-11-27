@@ -31,7 +31,11 @@ style.use("dark_background")
 labels_dict = {}
 
 
-def subreddit_stock_sentiment(generate_word_cloud=False, generate_scatter_plot=True, debug=False, dpi=150):
+def subreddit_stock_sentiment(generate_word_cloud=False,
+                              generate_scatter_plot=True,
+                              debug=False, dpi=150,
+                              download_headlines=True):
+
     with open("data/sentiment/auth.txt", "r") as f:
         lines = f.readlines()
         client_id = lines[0].strip()
@@ -39,7 +43,7 @@ def subreddit_stock_sentiment(generate_word_cloud=False, generate_scatter_plot=T
         username = lines[2].strip()
         subreddit = lines[3].strip()
 
-    if not debug:
+    if download_headlines:
         print("Downloading reddit headlines...")
 
         reddit = praw.Reddit(client_id=client_id,
@@ -162,6 +166,9 @@ def subreddit_stock_sentiment(generate_word_cloud=False, generate_scatter_plot=T
     all_df.sort_values(all_df.last_valid_index(), ascending=False, axis=1, inplace=True)
     all_df.index = date_col
 
+    if not debug:
+        all_df.reset_index(level=0).to_csv(f"data/sentiment/{subreddit}_sentiment.csv", index=False)
+
     sentiment_cols = [col for col in all_df.columns.values if col.endswith("sentiment")]
     df_plot = all_df[sentiment_cols]
     df_plot.columns = [s.split("_")[0] for s in sentiment_cols]
@@ -170,15 +177,16 @@ def subreddit_stock_sentiment(generate_word_cloud=False, generate_scatter_plot=T
         print("Making charts...")
 
         # ----------- TIMESERIES CHART -----------
-        plot_sentiment(df_plot, "timeseries")
+        plot_sentiment(df_plot, "timeseries", debug=debug)
 
         # ----------- HOURLY CHART -----------
-        plot_sentiment(df_plot, "hourly")
+        plot_sentiment(df_plot, "hourly", debug=debug)
 
         # ----------- DAILY CHART -----------
-        plot_sentiment(df_plot, "daily")
+        plot_sentiment(df_plot, "daily", debug=debug)
 
-    all_df.reset_index(level=0).to_csv(f"data/sentiment/{subreddit}_sentiment.csv", index=False)
+    if not debug:
+        all_df.reset_index(level=0).to_csv(f"data/sentiment/{subreddit}_sentiment.csv", index=False)
 
     if generate_scatter_plot:
 
@@ -199,7 +207,7 @@ def subreddit_stock_sentiment(generate_word_cloud=False, generate_scatter_plot=T
         plt.scatter(df_negative["log_word_frequency"], df_negative["sentiment"], marker="o", color="red")
 
         for i, row in df.iterrows():
-            plt.annotate(stock_label(row['symbol'], reload=(not debug)), (row["log_word_frequency"], row["sentiment"]),
+            plt.annotate(stock_label(row['symbol']), (row["log_word_frequency"], row["sentiment"]),
                          fontsize=8)
 
         plt.title("Reddit stock sentiment - scatter plot")
@@ -208,18 +216,20 @@ def subreddit_stock_sentiment(generate_word_cloud=False, generate_scatter_plot=T
         plt.xlabel("log(frequency)")
         plt.ylabel("sentiment score")
         file_path_scatter = "public_html/finance/res/img/sentiment/scatter_plots"
-        plt.savefig(f"{file_path_scatter}/{now.strftime(datetime_file_format)}_sentiment_scatter_plot.png", dpi=dpi)
-        copyfile(f"{file_path_scatter}/{now.strftime(datetime_file_format)}_sentiment_scatter_plot.png",
-                 f"{file_path_scatter}/current_sentiment_scatter_plot.png")
+
+        if not debug:
+            plt.savefig(f"{file_path_scatter}/{now.strftime(datetime_file_format)}_sentiment_scatter_plot.png", dpi=dpi)
+            copyfile(f"{file_path_scatter}/{now.strftime(datetime_file_format)}_sentiment_scatter_plot.png",
+                     f"{file_path_scatter}/current_sentiment_scatter_plot.png")
 
         plt.close()
         plt.clf()
 
-    generate_html.generate_sentiment_html(now)
+    generate_html.generate_sentiment_html(now, debug)
     print("Finished.")
 
 
-def plot_sentiment(df, plot_type, dpi=150, max_count=10):
+def plot_sentiment(df, plot_type, dpi=150, max_count=10, debug=False):
     if df is None or len(df) == 0:
         return
 
@@ -259,20 +269,22 @@ def plot_sentiment(df, plot_type, dpi=150, max_count=10):
     plt.legend(loc="upper left")
     file_path_hourly = f"public_html/finance/res/img/sentiment/{plot_type}_plots"
     file_name = f"_sentiment_{plot_type}_plot.png"
-    plt.savefig(f"{file_path_hourly}/{now.strftime(date_hour_file_format)}{file_name}", dpi=dpi)
-    copyfile(f"{file_path_hourly}/{now.strftime(date_hour_file_format)}{file_name}",
-             f"{file_path_hourly}/current{file_name}")
+
+    if not debug:
+        plt.savefig(f"{file_path_hourly}/{now.strftime(date_hour_file_format)}{file_name}", dpi=dpi)
+        copyfile(f"{file_path_hourly}/{now.strftime(date_hour_file_format)}{file_name}",
+                 f"{file_path_hourly}/current{file_name}")
 
     plt.close()
     plt.clf()
 
 
-def stock_label(symbol, reload=True):
+def stock_label(symbol):
     if symbol in labels_dict:
         return labels_dict[symbol]
     else:
         df = data_loader.load_price_history(symbol, dt.date.today() - dt.timedelta(days=5), dt.date.today(),
-                                            reload=reload)
+                                            reload=True)
         if df is not None and len(df) >= 2:
             old_close = df.iloc[-2]["Adj Close"]
             new_close = df.iloc[-1]["Adj Close"]
@@ -321,4 +333,4 @@ def save_image(data, filename, dpi=150):
 
 
 if __name__ == "__main__":
-    subreddit_stock_sentiment(debug=False, generate_scatter_plot=True)
+    subreddit_stock_sentiment(debug=False)

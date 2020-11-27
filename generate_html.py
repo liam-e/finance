@@ -7,7 +7,7 @@ def markdown_to_html(input_file):
         return markdown.markdown(f.read())
 
 
-def generate_sentiment_html(now):
+def generate_sentiment_html(now, debug=False):
     with open("data/sentiment/html/sentiment_header_snippet.html", "r") as f:
         header_snippet = f.read()
 
@@ -21,7 +21,8 @@ def generate_sentiment_html(now):
     html = header_snippet + last_updated + footer_snippet
 
     with open("public_html/finance/index.html", "w") as f:
-        f.write(html)
+        if not debug:
+            f.write(html)
 
 
 if __name__ == "__main__":
