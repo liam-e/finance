@@ -1,8 +1,10 @@
 import datetime as dt
 import os
+import sys
 
 import markdown
 
+os.chdir(sys.path[0])
 
 def markdown_to_html(input_file):
     with open(input_file, "r") as f:
