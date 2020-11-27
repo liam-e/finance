@@ -13,7 +13,6 @@ plt.style.use("fivethirtyeight")
 
 
 def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210), sentiment_value=None):
-
     try:
 
         start = start - dt.timedelta(days=max(smas))

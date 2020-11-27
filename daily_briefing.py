@@ -2,9 +2,9 @@
 import datetime as dt
 import os
 import sys
+
 import pandas as pd
 
-import data_loader
 import ohlc
 
 os.chdir(sys.path[0])

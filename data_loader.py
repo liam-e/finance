@@ -2,8 +2,9 @@ import datetime as dt
 import json
 import os
 from datetime import datetime
-import numpy as np
+
 import bs4
+import numpy as np
 import pandas as pd
 import requests
 import yfinance as yf
@@ -75,7 +76,8 @@ def load_price_history(symbol, start_date=dt.date(2000, 1, 1), end_date=dt.date.
             return df
     else:  # don't reload
         df = pd.read_csv(file_path, index_col=0, parse_dates=True)
-        return df[(pd.to_datetime(df.index).floor('D') >= start_date) & (pd.to_datetime(df.index).floor('D') <= end_date)]
+        return df[
+            (pd.to_datetime(df.index).floor('D') >= start_date) & (pd.to_datetime(df.index).floor('D') <= end_date)]
 
 
 def reload_all(symbols, start_date=dt.datetime(2000, 1, 1), end_date=dt.datetime.now()):
