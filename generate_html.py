@@ -85,7 +85,7 @@ if __name__ == "__main__":
 def generate_screener_html():
     watchlist = data_loader.watchlist()
 
-    df = stock_screener.screen_stocks(watchlist[:3], remove_screened=False, reload=True)
+    df = stock_screener.screen_stocks(watchlist, remove_screened=False, reload=True)
 
     with open("data/html_snippets/screener_header_snippet.html", "r") as f:
         header_snippet = f.read()
@@ -115,7 +115,7 @@ def generate_screener_html():
     with open("data/sentiment/top_daily_tickers.txt", "r") as f:
         reddit_top_symbols = f.read().split("\n")
 
-    df2 = stock_screener.screen_stocks(reddit_top_symbols[:3], remove_screened=False, reload=True)
+    df2 = stock_screener.screen_stocks(reddit_top_symbols, remove_screened=False, reload=True)
 
     table = df2.to_html(index=False, na_rep="")
 
