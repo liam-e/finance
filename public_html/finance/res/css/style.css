@@ -72,4 +72,12 @@ td {
 
 a {
     color: #30a14e;
+    display: block;
+    padding: 1em;
+}
+
+nav li {
+    list-style: none;
+    display: block;
+    margin: 0.5em;
 }
