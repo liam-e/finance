@@ -39,7 +39,7 @@ def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter
     if df is None or len(df) == 0:
         return
 
-    df.fillna(0, inplace=True)
+    # df.fillna(0, inplace=True)
 
     df.sort_values(df.last_valid_index(), ascending=False, axis=1, inplace=True)
 
@@ -54,7 +54,7 @@ def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter
     most_frequent_daily = df_daily.columns[:stocks_count].values
 
     df_hourly = df_freqency.resample("H").mean()
-    df_hourly.sort_values(df_daily.last_valid_index(), ascending=False, axis=1, inplace=True)
+    df_hourly.sort_values(df_hourly.last_valid_index(), ascending=False, axis=1, inplace=True)
     most_frequent_hourly = df_hourly.columns[:stocks_count].values
 
     logging.info("Generating charts...")
@@ -153,6 +153,7 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
     if plot_type == "daily":
         df = df.resample("D").mean()
         df = df[df.index >= df.index[-1] - dt.timedelta(days=30)]
+
     elif plot_type == "hourly":
         df = df.resample("H").mean()
         df = df[df.index >= df.index[-1] - dt.timedelta(days=7)]
@@ -167,23 +168,23 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
         logging.info(f"Dataframe is empty for {value_type} {plot_type} plot.")
         return
 
-    df.fillna(0, inplace=True)
-
-    df = df.sort_values(df.last_valid_index(), ascending=False, axis=1)
+    df.replace(0, np.nan, inplace=True)
 
     if value_type == "frequency":
         df = df[df.columns[:stocks_count]]
 
+    if log:
+        for symbol in df.columns.values:
+            df[symbol] = np.log(df[symbol] - np.min(df[symbol]) + 1)
+
+    df = df.sort_values(df.last_valid_index(), ascending=False, axis=1)
+
     plt.figure(figsize=(20, 10), dpi=dpi)
 
     for symbol in df.columns.values:
-        if log:
-            y = np.log(df[symbol] - np.min(df[symbol]) + 1)
-        else:
-            y = df[symbol]
-        plt.plot(pd.to_datetime(df.index), y, label=stock_label(symbol, simple=simple_labels))
+        plt.plot(pd.to_datetime(df.index), df[symbol], label=f"{df[symbol][-1]:.2f} - {stock_label(symbol, simple=simple_labels)}")
 
-    plt.title(f"{value_type} - {plot_type}")
+    plt.title(f"{value_type.title()} - {plot_type}")
     plt.xlabel("Date")
     if log:
         plt.ylabel(f"log({value_type})")
