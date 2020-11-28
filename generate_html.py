@@ -132,7 +132,7 @@ def generate_screener_html():
 
     table = table.replace("NaT", "")
 
-    html_content += "\n<h2>Daily top reddit stocks</h2>\n" + table
+    html_content += f"\n<h2>Daily top {len(reddit_top_symbols)} reddit stocks</h2>\n" + table
 
     html = header_snippet + html_content + footer_snippet
 
