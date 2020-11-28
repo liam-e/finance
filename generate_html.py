@@ -57,16 +57,15 @@ def generate_ohlc_html(now, debug=False):
     html_content = f"\n<header>\n<h1>Daily Briefing</h1>\n<h2>Showing candlestick graphs for now.</h2>\n" \
                    f"<p id='timestamp'>Last updated: {now.strftime('%A %d %B, %Y at %I:%M:%S %p')}</p>\n</header>\n"
 
-    for root, subdirs, files in os.walk(root_path):
-        for subdir in subdirs:
-            subheading = " ".join(subdir.title().split("_"))
-            html_content += f"\n<h3>{subheading}</h3>\n"
-            for root2, subdirs2, files2 in os.walk(f"{root_path}/{subdir}"):
-                for file in files2:
-                    img_path = f"{html_root_path}/{subdir}/{file}"
-                    img_name = f"{subdir.title()} {img_path.split('_')[-2].title()} plot"
-                    img_tag = f"<div class='imgbox'><img class='center-fit' src='{img_path}' alt='{img_name}'/></div>\n"
-                    html_content += img_tag
+    for subdir in ["watchlist", "reddit_sentiment"]:
+        subheading = " ".join(subdir.title().split("_"))
+        html_content += f"\n<h3>{subheading}</h3>\n"
+        for root, subdirs, files in os.walk(f"{root_path}/{subdir}"):
+            for file in files:
+                img_path = f"{html_root_path}/{subdir}/{file}"
+                img_name = f"{subdir.title()} {img_path.split('_')[-2].title()} plot"
+                img_tag = f"<div class='imgbox'><img class='center-fit' src='{img_path}' alt='{img_name}'/></div>\n"
+                html_content += img_tag
 
     html = header_snippet + html_content + footer_snippet
 

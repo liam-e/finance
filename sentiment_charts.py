@@ -67,7 +67,7 @@ def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter
     plot_sentiment(df_freqency, value_type="frequency", plot_type="timeseries", log=log_values, dpi=dpi, simple_labels=simple_labels)
 
     # ----------- SENTIMENT -----------
-    sentiment_cols = [col for col in df.columns.values if col.endswith("sentiment") and col.split("_")[0] in most_frequent_daily]
+    sentiment_cols = [col for col in df.columns if col.endswith("sentiment") and col.split("_")[0] in most_frequent_daily]
     df_sentiment = df[sentiment_cols]
     df_sentiment.columns = [s.split("_")[0] for s in sentiment_cols]
 
@@ -100,6 +100,9 @@ def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter
     plt.figure(figsize=(20, 10), dpi=dpi)
 
     df = df[df["sentiment"] != 0]
+
+    with open("data/sentiment/top_daily_tickers.txt", "w") as f:
+        f.write("\n".join(df["symbol"].values))
 
     df["log_frequency"] = np.log(df["frequency"])
 
@@ -278,4 +281,4 @@ def load_sentiment_data():
 
 if __name__ == "__main__":
 
-    plot_sentiment_charts(simple_labels=False)
+    plot_sentiment_charts(simple_labels=True)

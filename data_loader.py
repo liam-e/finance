@@ -67,6 +67,8 @@ def load_price_history(symbol, start_date=dt.datetime(2000, 1, 1), end_date=dt.d
             directory = f"data/{market}/price_history"
             if not os.path.exists(directory):
                 os.makedirs(directory)
+
+            print(file_path)
             df.reset_index(level=0).to_csv(file_path, index=False, date_format="%Y-%m-%d")
 
             return df
@@ -211,4 +213,5 @@ def monthly(df):
 
 
 def watchlist():
-    return ["abb", "ride"]
+    return ["abb", "ride", "aapl", "btl", "bah", "kmb", "cl", "sne", "ndaq", "tot", "rok",
+            "tpw.nz", "vgl.nz"]

@@ -21,12 +21,18 @@ mpl.rcParams.update({"grid.linestyle": "--", "grid.color": "darkgray"})
 
 
 def indicator_chart(symbol, directory, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210), sentiment_value=None):
+    print(f"Plotting ohlc chart for {symbol}...")
+
     try:
 
         start = start - dt.timedelta(days=max(smas))
         now = dt.datetime.now()
 
         df = data_loader.load_price_history(symbol, start, now)
+
+        if df is None or len(df) == 0:
+            print(f"Dataframe is empty for {symbol}.")
+            return
 
         date_delta = df.index[-1] - df.index[0]
 

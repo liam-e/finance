@@ -24,6 +24,22 @@ if __name__ == "__main__":
     logging.basicConfig(filename="sentiment_words.log", filemode="w", format=log_format, datefmt=date_format,
                         level=logging.INFO)
 
+    charts_path = "public_html/finance/res/img/ohlc"
+
+    # WATCHLIST
+    files = glob.glob(f'{charts_path}/watchlist/*')
+    for f in files:
+        os.remove(f)
+
+    watchlist = data_loader.watchlist()
+
+    print("Making watchlist charts...")
+    logging.info("Making watchlist charts...")
+
+    for symbol in watchlist:
+        ohlc.indicator_chart(symbol, directory="watchlist")
+
+    # REDDIT SENTIMENT
     with open("data/sentiment/auth.txt", "r") as f:
         lines = f.readlines()
         subreddit = lines[3].strip()
@@ -33,33 +49,24 @@ if __name__ == "__main__":
     if os.path.isfile(file_path):
         df = pd.read_csv(file_path, index_col=0, parse_dates=True)
 
-        sentiment_cols = [col for col in df.columns.values if col.endswith("sentiment")]
-
-        df2 = df[sentiment_cols]
-
-        sentiment_symbols = [s.split("_")[0] for s in sentiment_cols]
-
-        df2.columns = sentiment_symbols
-
-        watchlist = data_loader.watchlist()
-
-        charts_path = "public_html/finance/res/img/ohlc"
-
-        files = glob.glob(f'{charts_path}/from_watchlist/*') + glob.glob(f'{charts_path}/reddit_sentiment/*')
+        files = glob.glob(f'{charts_path}/reddit_sentiment/*')
         for f in files:
             os.remove(f)
 
-        print("Making charts...")
-        logging.info("Making charts...")
+        with open("data/sentiment/top_daily_tickers.txt", "r") as f:
+            sentiment_tickers = f.read().split("\n")
 
-        for symbol in watchlist:
-            ohlc.indicator_chart(symbol, directory="from_watchlist")
+        print("Making sentiment charts...")
+        logging.info("Making sentiment charts...")
 
-        for symbol in sentiment_symbols[:2]:
-            sentiment_value = df2[symbol].iloc[-1]
+        for symbol in sentiment_tickers:
 
-            if df2[symbol].iloc[-1] > 0:
-                ohlc.indicator_chart(symbol, sentiment_value=sentiment_value, directory="reddit_sentiment")
+            if f"{symbol}_sentiment" in df and f"{symbol}_frequency" in df:
+                sentiment_value = df.resample("D").mean()[f"{symbol}_sentiment"].iloc[-1]
+            else:
+                sentiment_value = None
+
+            ohlc.indicator_chart(symbol, sentiment_value=sentiment_value, directory="reddit_sentiment")
 
         generate_html.generate_ohlc_html(now)
 
