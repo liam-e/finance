@@ -32,7 +32,7 @@ def generate_sentiment_html(now, debug=False):
                 for file in files2:
                     if file.startswith("current"):
                         img_path = f"{html_root_path}/{subdir}/{file}"
-                        img_name = f"{subdir.title()} {img_path.split('_')[-2].title()} plot"
+                        img_name = f"{subdir.title()} {img_path.split('_')[-2]} plot"
                         img_tag = f"<div class='imgbox'><img class='center-fit' src='{img_path}' alt='{img_name}'/></div>\n"
                         html_content += img_tag
 
@@ -63,7 +63,7 @@ def generate_ohlc_html(now, debug=False):
         for root, subdirs, files in os.walk(f"{root_path}/{subdir}"):
             for file in files:
                 img_path = f"{html_root_path}/{subdir}/{file}"
-                img_name = f"{subdir.title()} {img_path.split('_')[-2].title()} plot"
+                img_name = f"{img_path.split('/')[-1].split('_')[-2].upper()} OHLC plot"
                 img_tag = f"<div class='imgbox'><img class='center-fit' src='{img_path}' alt='{img_name}'/></div>\n"
                 html_content += img_tag
 

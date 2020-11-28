@@ -59,14 +59,14 @@ if __name__ == "__main__":
         print("Making sentiment charts...")
         logging.info("Making sentiment charts...")
 
-        for symbol in sentiment_tickers:
+        for i, symbol in enumerate(sentiment_tickers):
 
             if f"{symbol}_sentiment" in df and f"{symbol}_frequency" in df:
-                sentiment_value = df.resample("D").mean()[f"{symbol}_sentiment"].iloc[-1]
-            else:
-                sentiment_value = None
+                df_daily = df.resample("D").mean()
+                sentiment_value = df_daily[f"{symbol}_sentiment"].iloc[-1]
+                frequency_value = df_daily[f"{symbol}_frequency"].iloc[-1]
 
-            ohlc.indicator_chart(symbol, sentiment_value=sentiment_value, directory="reddit_sentiment")
+                ohlc.indicator_chart(symbol, frequency_value=frequency_value, sentiment_value=sentiment_value, prefix=i, directory="reddit_sentiment")
 
         generate_html.generate_ohlc_html(now)
 

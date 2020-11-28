@@ -20,7 +20,8 @@ style.use("dark_background")
 mpl.rcParams.update({"grid.linestyle": "--", "grid.color": "darkgray"})
 
 
-def indicator_chart(symbol, directory, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210), sentiment_value=None):
+def indicator_chart(symbol, directory, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210), sentiment_value=None,
+                    frequency_value=None, prefix=None):
     print(f"Plotting ohlc chart for {symbol}...")
 
     try:
@@ -168,24 +169,28 @@ def indicator_chart(symbol, directory, start=dt.datetime(2020, 9, 1), smas=(10, 
         plt.xlabel("Date")  # set x axis label
         plt.ylabel("Price")  # set y axis label
 
-        plt.title(f"{sentiment_charts.stock_label(symbol)} - daily indicator chart")  # set title
+        if sentiment_value is not None and frequency_value is not None:
+            plt.title(f"{sentiment_charts.stock_label(symbol)} - daily indicator chart - "
+                      f"sentiment = {frequency_value:.2f}, frequency = {frequency_value}")
+        else:
+            plt.title(f"{sentiment_charts.stock_label(symbol)} - daily indicator chart")
         plt.ylim(df["Low"].min(), df["High"].max() * 1.05)  # add margins
         # plt.yscale("log")
         plt.legend(loc="upper left")
 
         plt.grid()
 
-        if sentiment_value is not None:
-            sentiment_str = f"{sentiment_value:.2f}_"
+        if prefix is not None:
+            prefix_str = f"{prefix}_"
         else:
-            sentiment_str = ""
+            prefix_str = ""
 
         file_path = f"public_html/finance/res/img/ohlc/{directory}"
 
         if not os.path.exists(file_path):
             os.makedirs(file_path)
 
-        plt.savefig(f"{file_path}/{sentiment_str}{symbol}_ohlc.png", dpi=150)
+        plt.savefig(f"{file_path}/{prefix_str}{symbol}_ohlc.png", dpi=150)
 
         plt.close(fig)
         plt.clf()
