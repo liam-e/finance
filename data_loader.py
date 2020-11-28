@@ -208,3 +208,7 @@ def weekly(df):
 def monthly(df):
     return df.resample("M", label="left").agg({"Open": "first", "High": "max", "Low": "min",
                                                "Close": "last", "Adj Close": "last", "Volume": "sum"})
+
+
+def watchlist():
+    return ["abb", "ride"]

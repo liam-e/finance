@@ -3,6 +3,8 @@ import datetime as dt
 import os
 import sys
 import pandas as pd
+
+import data_loader
 import generate_html
 import ohlc
 import glob
@@ -31,17 +33,21 @@ if __name__ == "__main__":
 
         df2.columns = sentiment_symbols
 
-        watchlist = [symbol for symbol in ["ride", "abb"] if symbol not in sentiment_symbols]
+        watchlist = data_loader.watchlist()
 
-        files = glob.glob('public_html/finance/res/img/ohlc/*')
+        charts_path = "public_html/finance/res/img/ohlc"
+
+        files = glob.glob(f'{charts_path}/from_watchlist/*') + glob.glob(f'{charts_path}/reddit_sentiment/*')
         for f in files:
             os.remove(f)
 
         for symbol in watchlist:
-            ohlc.indicator_chart(symbol)
+            ohlc.indicator_chart(symbol, directory="from_watchlist")
 
-        for symbol in sentiment_symbols:
+        for symbol in sentiment_symbols[:2]:
+            sentiment_value = df2[symbol].iloc[-1]
+
             if df2[symbol].iloc[-1] > 0:
-                ohlc.indicator_chart(symbol)
+                ohlc.indicator_chart(symbol, sentiment_value=sentiment_value, directory="reddit_sentiment")
 
         generate_html.generate_ohlc_html(now)

@@ -11,6 +11,7 @@ import matplotlib as mpl
 from mplfinance.original_flavor import candlestick_ohlc
 
 import data_loader
+import sentiment_charts
 import sentiment_words
 
 os.chdir(sys.path[0])
@@ -19,7 +20,7 @@ style.use("dark_background")
 mpl.rcParams.update({"grid.linestyle": "--", "grid.color": "darkgray"})
 
 
-def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210)):
+def indicator_chart(symbol, directory, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210), sentiment_value=None):
     try:
 
         start = start - dt.timedelta(days=max(smas))
@@ -161,14 +162,24 @@ def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210
         plt.xlabel("Date")  # set x axis label
         plt.ylabel("Price")  # set y axis label
 
-        plt.title(sentiment_words.stock_label(symbol) + " - daily indicator chart")  # set title
+        plt.title(f"{sentiment_charts.stock_label(symbol)} - daily indicator chart")  # set title
         plt.ylim(df["Low"].min(), df["High"].max() * 1.05)  # add margins
         # plt.yscale("log")
         plt.legend(loc="upper left")
 
         plt.grid()
 
-        plt.savefig(f"public_html/finance/res/img/ohlc/{symbol}_ohlc.png", dpi=150)
+        if sentiment_value is not None:
+            sentiment_str = f"{sentiment_value:.2f}_"
+        else:
+            sentiment_str = ""
+
+        file_path = f"public_html/finance/res/img/ohlc/{directory}"
+
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+
+        plt.savefig(f"{file_path}/{sentiment_str}{symbol}_ohlc.png", dpi=150)
 
         plt.close(fig)
         plt.clf()
