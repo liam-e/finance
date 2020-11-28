@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import datetime as dt
+import logging
 import os
 import sys
 import pandas as pd
@@ -14,8 +15,15 @@ now = dt.datetime.now()
 datetime_file_format = '%Y_%m_%d_%H_%M_%S'
 date_hour_file_format = "%Y_%m_%d_%H"
 date_file_format = '%Y_%m_%d'
+date_format = "%d/%m/%Y %H:%M:%S"
+log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
 
 if __name__ == "__main__":
+
+    logging.basicConfig(filename="sentiment_words.log", filemode="w", format=log_format, datefmt=date_format,
+                        level=logging.INFO)
+
     with open("data/sentiment/auth.txt", "r") as f:
         lines = f.readlines()
         subreddit = lines[3].strip()
@@ -41,6 +49,9 @@ if __name__ == "__main__":
         for f in files:
             os.remove(f)
 
+        print("Making charts...")
+        logging.info("Making charts...")
+
         for symbol in watchlist:
             ohlc.indicator_chart(symbol, directory="from_watchlist")
 
@@ -51,3 +62,6 @@ if __name__ == "__main__":
                 ohlc.indicator_chart(symbol, sentiment_value=sentiment_value, directory="reddit_sentiment")
 
         generate_html.generate_ohlc_html(now)
+
+        print("Success.")
+        logging.info("Success.")
