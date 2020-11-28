@@ -2,11 +2,10 @@
 import datetime as dt
 import os
 import sys
-
 import pandas as pd
-
 import generate_html
 import ohlc
+import glob
 
 os.chdir(sys.path[0])
 now = dt.datetime.now()
@@ -33,6 +32,10 @@ if __name__ == "__main__":
         df2.columns = sentiment_symbols
 
         watchlist = [symbol for symbol in ["ride", "abb"] if symbol not in sentiment_symbols]
+
+        files = glob.glob('public_html/finance/res/img/ohlc/*')
+        for f in files:
+            os.remove(f)
 
         for symbol in watchlist:
             ohlc.indicator_chart(symbol)

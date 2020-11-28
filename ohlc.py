@@ -2,20 +2,21 @@
 import datetime as dt
 import os
 import sys
-
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
 from matplotlib import style
+import matplotlib as mpl
 from mplfinance.original_flavor import candlestick_ohlc
 
 import data_loader
-import sentiment
-
+import sentiment_words
 
 os.chdir(sys.path[0])
 style.use("dark_background")
+
+mpl.rcParams.update({"grid.linestyle": "--", "grid.color": "darkgray"})
 
 
 def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210)):
@@ -31,7 +32,7 @@ def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210
         smas = [sma for sma in smas if sma < date_delta.days / 2]
 
         fig, ax = plt.subplots()
-        fig.set_size_inches(20, 10)
+        fig.set_size_inches(18, 9)
 
         for sma in smas:
             df[f"SMA_{sma}"] = df["Adj Close"].rolling(window=sma).mean()
@@ -81,7 +82,7 @@ def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210
                 else:
                     color = "green"
 
-                plt.plot(df["Date"][i], df["High"][i], marker="o", ms=10, ls="", color=color)
+                plt.plot(df["Date"][i], df["High"][i], marker="o", ms=8, ls="", color=color)
                 plt.annotate(f"{df['High'][i]:.2f}", (df["Date"][i], df["High"][i]), fontsize=10)
 
                 green_dot_date.append(i)
@@ -90,8 +91,8 @@ def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210
                 # Lower Bollinger Band Bounce
             if ((last_low < last_low_bb) or (df["Low"][i] < df["lower_band"][i])) and (
                     df["Adj Close"][i] > last_close and df["Adj Close"][i] > df["lower_band"][i]) and last_K < 60:
-                plt.plot(df["Date"][i], df["Low"][i], marker="o", ms=10, ls="", color="blue")  # plot blue dot
-                plt.annotate(f"{df['Low'][i]:.2f}", (df["Date"][i], df["Low"][i]), fontsize=10)
+                plt.plot(df["Date"][i], df["Low"][i], marker="o", ms=8, ls="", color="deepskyblue")  # plot blue dot
+                plt.annotate(f"{df['Low'][i]:.2f}", (df["Date"][i], df["Low"][i]), xytext=(-10, 7), fontsize=10)
 
                 # store values
             last_K = df["K"][i]
@@ -101,13 +102,14 @@ def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210
             last_low_bb = df["lower_band"][i]
 
         # Plot moving averages and BBands
-        for sma in smas:  # This for loop calculates the EMAs for te stated periods and appends to dataframe
-            df[f"SMA_{sma}"].plot(label=f"{sma} SMA")
-        df["upper_band"].plot(label="Upper Band", color="lightgray")
-        df["lower_band"].plot(label="Lower Band", color="lightgray")
+        sma_colors = ["cyan", "magenta", "yellow", "orange"]
+        for i, sma in enumerate(smas):  # This for loop calculates the EMAs for te stated periods and appends to dataframe
+            df[f"SMA_{sma}"].plot(label=f"{sma} SMA", color=sma_colors[i])
+        df["upper_band"].plot(label="Upper Band", color="dimgray", linestyle=":")
+        df["lower_band"].plot(label="Lower Band", color="dimgray", linestyle=":")
 
         # plot candlesticks
-        candlestick_ohlc(ax, ohlc, width=0.75, colorup="k", colordown="r", alpha=0.75)
+        candlestick_ohlc(ax, ohlc, width=0.75, colorup="w", colordown="r", alpha=0.75)
 
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%B %d"))  # change x axis back to datestamps
         ax.xaxis.set_major_locator(mticker.MaxNLocator(8))  # add more x axis labels
@@ -152,17 +154,19 @@ def indicator_chart(symbol, start=dt.datetime(2020, 9, 1), smas=(10, 30, 50, 210
 
             # print(str(pivots[index])+": "+str(dates[index])) #Prints Pivot, Date couple
             plt.plot_date([dates[index] - (timeD * .075), dates[index] + timeD],  # Plots horizontal line at pivot value
-                          [pivots[index], pivots[index]], linestyle="--", linewidth=2, marker=",", color="green")
+                          [pivots[index], pivots[index]], linestyle="--", linewidth=2, marker=",", color="chartreuse")
             plt.annotate(str(pivots[index]), (mdates.date2num(dates[index]), pivots[index]), xytext=(-10, 7),
-                         textcoords="offset points", fontsize=14, arrowprops=dict(arrowstyle="-|>"))
+                         textcoords="offset points", fontsize=14, arrowprops=dict(arrowstyle="simple"))
 
         plt.xlabel("Date")  # set x axis label
         plt.ylabel("Price")  # set y axis label
 
-        plt.title(sentiment.stock_label(symbol) + " - daily indicator chart")  # set title
+        plt.title(sentiment_words.stock_label(symbol) + " - daily indicator chart")  # set title
         plt.ylim(df["Low"].min(), df["High"].max() * 1.05)  # add margins
         # plt.yscale("log")
         plt.legend(loc="upper left")
+
+        plt.grid()
 
         plt.savefig(f"public_html/finance/res/img/ohlc/{symbol}_ohlc.png", dpi=150)
 

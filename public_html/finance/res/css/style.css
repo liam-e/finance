@@ -25,7 +25,10 @@ html {
     font-size: 0.75em;
 }
 
-header {
+#container {
     text-align: center;
-    padding: 1em;
+}
+
+h1, h2, p {
+    padding: 0.5em 1em;
 }
