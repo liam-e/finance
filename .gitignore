@@ -132,4 +132,5 @@ dmypy.json
 old/
 data/**/*.csv
 data/**/*.json
-auth.txt
+*auth.txt
+*.png

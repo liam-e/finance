@@ -29,7 +29,7 @@ cols_to_remove = ["longName",
                   "quoteType",
                   "symbol",
                   "tradeable",
-                  "payoutRatio", "gmtOffSetMilliseconds", "market", "maxAge", ]
+                  "payoutRatio", "gmtOffSetMilliseconds", "market", "maxAge", "uuid"]
 
 date_cols = ["dateShortInterest", "exDividendDate", "lastDividendDate", "lastFiscalYearEnd", "lastSplitDate",
              "mostRecentQuarter", "nextFiscalYearEnd", "sharesShortPreviousMonthDate"]
@@ -128,21 +128,33 @@ def screen_stock(symbol, market="us", reload=False, remove_screened=True):
     if info_dict is None:
         info_dict = {}
 
-    for key in ["longName", "sector", "dividendRate", "dividendYield", "payoutRatio"]:
+    for key in ["dividendRate", "dividendYield", "payoutRatio"]:
         if key not in info_dict:
             info_dict[key] = np.nan
+        elif info_dict[key] is None:
+            info_dict[key] = np.nan
+        elif key == "dividendRate":
+            info_dict[key] = np.round(info_dict[key], 2)
+        else:
+            info_dict[key] = np.round(info_dict[key], 4)
+
+    for key in ["longName", "sector"]:
+        if key not in info_dict:
+            info_dict[key] = ""
+        elif info_dict[key] is None:
+            info_dict[key] = ""
 
     row = {
-        "Symbol": symbol,
         "Security": info_dict["longName"],
+        "Symbol": symbol.upper(),
         "Sector": info_dict["sector"],
         "RSI": np.round(rs_rating, 2),
-        "Passes Mark Minervini screening": is_screened_str,
+        "Mark Minervini test": is_screened_str,
         "Current Close": np.round(current_close, 2),
-        "dividendRate": np.round(info_dict["dividendRate"], 2),
-        "dividendYield": np.round(info_dict["dividendYield"], 4),
-        "Payout Ratio": np.round(info_dict["payoutRatio"], 4),
-        "Simulation Percent Return": simulator.simulate_ema_strategy(df, symbol, market=market, reload=reload),
+        "div. Rate": info_dict["dividendRate"],
+        "div. Yield": info_dict["dividendYield"],
+        "Payout Ratio": info_dict["payoutRatio"],
+        "Simulation % Return": simulator.simulate_ema_strategy(df, symbol, market=market, reload=reload),
         "50 Day MA": moving_average_50,
         "150 Day MA": moving_average_150,
         "200 Day MA": moving_average_200,
@@ -152,20 +164,29 @@ def screen_stock(symbol, market="us", reload=False, remove_screened=True):
 
     for k, v in info_dict.items():
         if k not in cols_to_remove and v is not None:
+            # type(v)
+            # if k == "longBusinessSummary":
+            #     row[k] = v.split('.')[0]
+            # else:
             row[k] = v
 
     return row
 
 
-def screen_stocks(symbols, market="us", reload=False, remove_screened=True):
+def screen_stocks(symbols, reload=False, remove_screened=True, save_files=False):
     out_df = None
 
     file_path = "out/sheets/nz_screened"
 
     for symbol in symbols:
+
+        if symbol.endswith(".nz"):
+            market = "nz"
+        else:
+            market = "us"
+
         row = screen_stock(symbol, market=market, reload=reload, remove_screened=remove_screened)
         if row:
-            print(row)
             if out_df is None:
                 out_df = pd.DataFrame(columns=list(row.keys()))
             out_df = out_df.append(row, ignore_index=True)
@@ -183,20 +204,22 @@ def screen_stocks(symbols, market="us", reload=False, remove_screened=True):
 
     out_df = out_df[cols]
 
-    out_df.to_csv(f"{file_path}.csv", index=False, date_format="%Y-%m-%d", header=True)
-    writer = pd.ExcelWriter(f"{file_path}.xlsx", engine="xlsxwriter",
-                            date_format="YYYY-MM-DD")
-    out_df.to_excel(writer, sheet_name="sheet1")
-    worksheet = writer.sheets["sheet1"]
-    for idx, col in enumerate(out_df):
-        series = out_df[col]
-        max_len = max((
-            series.astype(str).map(len).max(),  # len of largest item
-            len(str(series.name))  # len of column name/header
-        )) + 1  # adding a little extra space
-        worksheet.set_column(idx, idx, max_len)  # set column width
+    if save_files:
 
-    writer.save()
+        out_df.to_csv(f"{file_path}.csv", index=False, date_format="%Y-%m-%d", header=True)
+        writer = pd.ExcelWriter(f"{file_path}.xlsx", engine="xlsxwriter",
+                                date_format="YYYY-MM-DD")
+        out_df.to_excel(writer, sheet_name="sheet1")
+        worksheet = writer.sheets["sheet1"]
+        for idx, col in enumerate(out_df):
+            series = out_df[col]
+            max_len = max((
+                series.astype(str).map(len).max(),  # len of largest item
+                len(str(series.name))  # len of column name/header
+            )) + 1  # adding a little extra space
+            worksheet.set_column(idx, idx, max_len)  # set column width
 
-    print(f"Successfully screened {len(symbols)} stocks down to {len(out_df)}.")
+        writer.save()
+
+        print(f"Successfully screened {len(symbols)} stocks down to {len(out_df)}.")
     return out_df

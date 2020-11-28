@@ -74,8 +74,13 @@ def load_price_history(symbol, start_date=dt.datetime(2000, 1, 1), end_date=dt.d
             return df
     else:  # don't reload
         df = pd.read_csv(file_path, index_col=0, parse_dates=True)
-        return df[
-            (pd.to_datetime(df.index).floor('D') >= start_date) & (pd.to_datetime(df.index).floor('D') <= end_date)]
+        try:
+            return df[(pd.to_datetime(df.index).floor('D') >= start_date) & (pd.to_datetime(df.index).floor('D') <= end_date)]
+        except TypeError:
+            df = pdr.get_data_yahoo(symbol, start_date, end_date)
+            df.reset_index(level=0).to_csv(file_path, index=False, date_format="%Y-%m-%d")
+            return df
+
 
 
 def reload_all(symbols, start_date=dt.datetime(2000, 1, 1), end_date=dt.datetime.now()):
@@ -112,7 +117,7 @@ def load_ticker_info(symbol, market="us", type_str="info", reload=False):
             if type_str == "info":
                 try:
                     info_dict = ticker.info
-                except ValueError:
+                except:
                     print(f"Error, no info found for {symbol}.")
                     return
             else:

@@ -10,6 +10,8 @@ import generate_html
 import ohlc
 import glob
 
+import stock_screener
+
 os.chdir(sys.path[0])
 now = dt.datetime.now()
 datetime_file_format = '%Y_%m_%d_%H_%M_%S'
@@ -72,3 +74,7 @@ if __name__ == "__main__":
 
         print("Success.")
         logging.info("Success.")
+
+    df = stock_screener.screen_stocks(watchlist, remove_screened=False, reload=True)
+
+    generate_html.generate_screener_html(df)

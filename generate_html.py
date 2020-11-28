@@ -39,8 +39,7 @@ def generate_sentiment_html(now, debug=False):
     html = header_snippet + html_content + footer_snippet
 
     with open("public_html/finance/sentiment/index.html", "w") as f:
-        if not debug:
-            f.write(html)
+        f.write(html)
 
 
 def generate_ohlc_html(now, debug=False):
@@ -70,9 +69,43 @@ def generate_ohlc_html(now, debug=False):
     html = header_snippet + html_content + footer_snippet
 
     with open("public_html/finance/daily_briefing/index.html", "w") as f:
-        if not debug:
-            f.write(html)
+        f.write(html)
 
 
 if __name__ == "__main__":
     generate_sentiment_html(dt.datetime.now())
+
+
+def generate_screener_html(df):
+
+    with open("data/sentiment/html/screener_header_snippet.html", "r") as f:
+        header_snippet = f.read()
+
+    with open("data/sentiment/html/screener_footer_snippet.html", "r") as f:
+        footer_snippet = f.read()
+
+    # for i, row in df.iterrows():
+    #     if row['website'] != "":
+    #         df["Security"][i] = f"<a href='{row['website']}' target='_blank'>{row['Security']}</a>"
+    #
+    # del df['website']
+
+    html_content = df.to_html(index=False, na_rep="")
+
+    html_content = html_content.replace('<table border="1" class="dataframe">', '<table border="1" class="dataframe tablesorter">')
+
+    html_content = html_content.replace("<td>", "<td><div class='table-cell'>")
+    html_content = html_content.replace("</td>", "</div></td>")
+
+    html_content = html_content.replace("<th>", "<th><div class='table-cell'>")
+    html_content = html_content.replace("</th>", "</div></th>")
+
+    html_content = html_content.replace("PASS", "<span class='pass'>PASS</span>")
+    html_content = html_content.replace("FAIL", "<span class='fail'>FAIL</span>")
+
+    html_content = html_content.replace("NaT", "")
+
+    html = header_snippet + html_content + footer_snippet
+
+    with open("public_html/finance/screener/index.html", "w") as f:
+        f.write(html)
