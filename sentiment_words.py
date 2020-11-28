@@ -148,7 +148,6 @@ def subreddit_stock_sentiment(debug=False):
     if not debug:
         df.reset_index(level=0).to_csv(f"data/sentiment/{subreddit}_sentiment.csv", index=False)
 
-    generate_html.generate_sentiment_html(now, debug)
     logging.info("Success.")
 
 

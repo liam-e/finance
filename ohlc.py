@@ -171,7 +171,7 @@ def indicator_chart(symbol, directory, start=dt.datetime(2020, 9, 1), smas=(10, 
 
         if sentiment_value is not None and frequency_value is not None:
             plt.title(f"{sentiment_charts.stock_label(symbol)} - daily indicator chart - "
-                      f"sentiment = {sentiment_value:.2f}, frequency = {frequency_value}")
+                      f"sentiment = {sentiment_value:.2f}, frequency = {frequency_value:.2f}")
         else:
             plt.title(f"{sentiment_charts.stock_label(symbol)} - daily indicator chart")
         plt.ylim(df["Low"].min(), df["High"].max() * 1.05)  # add margins

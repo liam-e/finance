@@ -143,7 +143,7 @@ def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter
     logging.info(f"scatter plot of sentiment completed.")
     logging.info(f"Scatter plot completed.")
 
-    generate_html.generate_sentiment_html(now)
+    generate_html.generate_sentiment_html()
     logging.info("Success.")
 
 
@@ -281,4 +281,4 @@ def load_sentiment_data():
 
 if __name__ == "__main__":
 
-    plot_sentiment_charts(simple_labels=True)
+    plot_sentiment_charts(simple_labels=False)

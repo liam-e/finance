@@ -3,6 +3,9 @@ import os
 import sys
 import markdown
 
+import data_loader
+import stock_screener
+
 os.chdir(sys.path[0])
 
 
@@ -11,18 +14,18 @@ def markdown_to_html(input_file):
         return markdown.markdown(f.read())
 
 
-def generate_sentiment_html(now, debug=False):
-    with open("data/sentiment/html/sentiment_header_snippet.html", "r") as f:
+def generate_sentiment_html():
+    with open("data/html_snippets/sentiment_header_snippet.html", "r") as f:
         header_snippet = f.read()
 
-    with open("data/sentiment/html/sentiment_footer_snippet.html", "r") as f:
+    with open("data/html_snippets/sentiment_footer_snippet.html", "r") as f:
         footer_snippet = f.read()
 
     root_path = "public_html/finance/res/img/sentiment"
 
     html_root_path = "../res/img/sentiment"
 
-    html_content = f"\n<header>\n<h1>Reddit stock sentiment</h1>\n<p id='timestamp'>Last updated: {now.strftime('%A %d %B, %Y at %I:%M:%S %p')}</p>\n</header>\n"
+    html_content = f"\n<header>\n<h1>Reddit stock sentiment</h1>\n<p id='timestamp'>Last updated: {dt.datetime.now().strftime('%A %d %B, %Y at %I:%M:%S %p')}</p>\n</header>\n"
 
     for root, subdirs, files in os.walk(root_path):
         for subdir in subdirs:
@@ -42,11 +45,11 @@ def generate_sentiment_html(now, debug=False):
         f.write(html)
 
 
-def generate_ohlc_html(now, debug=False):
-    with open("data/sentiment/html/ohlc_header_snippet.html", "r") as f:
+def generate_ohlc_html():
+    with open("data/html_snippets/ohlc_header_snippet.html", "r") as f:
         header_snippet = f.read()
 
-    with open("data/sentiment/html/ohlc_footer_snippet.html", "r") as f:
+    with open("data/html_snippets/ohlc_footer_snippet.html", "r") as f:
         footer_snippet = f.read()
 
     root_path = "public_html/finance/res/img/ohlc"
@@ -54,7 +57,7 @@ def generate_ohlc_html(now, debug=False):
     html_root_path = "../res/img/ohlc"
 
     html_content = f"\n<header>\n<h1>Daily Briefing</h1>\n<h2>Showing candlestick graphs for now.</h2>\n" \
-                   f"<p id='timestamp'>Last updated: {now.strftime('%A %d %B, %Y at %I:%M:%S %p')}</p>\n</header>\n"
+                   f"<p id='timestamp'>Last updated: {dt.datetime.now().strftime('%A %d %B, %Y at %I:%M:%S %p')}</p>\n</header>\n"
 
     for subdir in ["watchlist", "reddit_sentiment"]:
         subheading = " ".join(subdir.title().split("_"))
@@ -73,22 +76,21 @@ def generate_ohlc_html(now, debug=False):
 
 
 if __name__ == "__main__":
-    generate_sentiment_html(dt.datetime.now())
+    generate_sentiment_html()
+    generate_ohlc_html()
+    generate_sentiment_html()
 
 
-def generate_screener_html(df):
+def generate_screener_html():
+    watchlist = data_loader.watchlist()
 
-    with open("data/sentiment/html/screener_header_snippet.html", "r") as f:
+    df = stock_screener.screen_stocks(watchlist, remove_screened=False, reload=True)
+
+    with open("data/html_snippets/screener_header_snippet.html", "r") as f:
         header_snippet = f.read()
 
-    with open("data/sentiment/html/screener_footer_snippet.html", "r") as f:
+    with open("data/html_snippets/screener_footer_snippet.html", "r") as f:
         footer_snippet = f.read()
-
-    # for i, row in df.iterrows():
-    #     if row['website'] != "":
-    #         df["Security"][i] = f"<a href='{row['website']}' target='_blank'>{row['Security']}</a>"
-    #
-    # del df['website']
 
     html_content = df.to_html(index=False, na_rep="")
 
@@ -104,6 +106,8 @@ def generate_screener_html(df):
     html_content = html_content.replace("FAIL", "<span class='fail'>FAIL</span>")
 
     html_content = html_content.replace("NaT", "")
+
+    html_content = f"\n<header>\n<h1>Daily Briefing</h1>\n<p id='timestamp'>Last updated: {dt.datetime.now().strftime('%A %d %B, %Y at %I:%M:%S %p')}</p>\n</header>\n" + html_content
 
     html = header_snippet + html_content + footer_snippet
 
