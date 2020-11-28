@@ -2,17 +2,17 @@
 import datetime as dt
 import os
 import sys
+
+import matplotlib as mpl
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
 from matplotlib import style
-import matplotlib as mpl
 from mplfinance.original_flavor import candlestick_ohlc
 
 import data_loader
 import sentiment_charts
-import sentiment_words
 
 os.chdir(sys.path[0])
 style.use("dark_background")
@@ -111,7 +111,8 @@ def indicator_chart(symbol, directory, start=dt.datetime(2020, 9, 1), smas=(10, 
 
         # Plot moving averages and BBands
         sma_colors = ["cyan", "magenta", "yellow", "orange"]
-        for i, sma in enumerate(smas):  # This for loop calculates the EMAs for te stated periods and appends to dataframe
+        for i, sma in enumerate(
+                smas):  # This for loop calculates the EMAs for te stated periods and appends to dataframe
             df[f"SMA_{sma}"].plot(label=f"{sma} SMA", color=sma_colors[i])
         df["upper_band"].plot(label="Upper Band", color="dimgray", linestyle=":")
         df["lower_band"].plot(label="Lower Band", color="dimgray", linestyle=":")

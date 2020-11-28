@@ -2,15 +2,12 @@
 import datetime as dt
 import logging
 import os
-import pickle
-import re
 import sys
 from shutil import copyfile
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import praw
 from matplotlib import style
 from wordcloud import WordCloud
 
@@ -62,18 +59,23 @@ def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter
     log_values = True
 
     # ----------- FREQUENCY -----------
-    plot_sentiment(df_freqency, value_type="frequency", plot_type="daily", log=log_values, dpi=dpi, simple_labels=simple_labels)
-    plot_sentiment(df_freqency, value_type="frequency", plot_type="hourly", log=log_values, dpi=dpi, simple_labels=simple_labels)
-    plot_sentiment(df_freqency, value_type="frequency", plot_type="timeseries", log=log_values, dpi=dpi, simple_labels=simple_labels)
+    plot_sentiment(df_freqency, value_type="frequency", plot_type="daily", log=log_values, dpi=dpi,
+                   simple_labels=simple_labels)
+    plot_sentiment(df_freqency, value_type="frequency", plot_type="hourly", log=log_values, dpi=dpi,
+                   simple_labels=simple_labels)
+    plot_sentiment(df_freqency, value_type="frequency", plot_type="timeseries", log=log_values, dpi=dpi,
+                   simple_labels=simple_labels)
 
     # ----------- SENTIMENT -----------
-    sentiment_cols = [col for col in df.columns if col.endswith("sentiment") and col.split("_")[0] in most_frequent_daily]
+    sentiment_cols = [col for col in df.columns if
+                      col.endswith("sentiment") and col.split("_")[0] in most_frequent_daily]
     df_sentiment = df[sentiment_cols]
     df_sentiment.columns = [s.split("_")[0] for s in sentiment_cols]
 
     plot_sentiment(df_sentiment, value_type="sentiment", plot_type="daily", dpi=dpi, simple_labels=simple_labels)
 
-    sentiment_cols = [col for col in df.columns if col.endswith("sentiment") and col.split("_")[0] in most_frequent_hourly]
+    sentiment_cols = [col for col in df.columns if
+                      col.endswith("sentiment") and col.split("_")[0] in most_frequent_hourly]
     df_sentiment = df[sentiment_cols]
     df_sentiment.columns = [s.split("_")[0] for s in sentiment_cols]
 
@@ -87,7 +89,8 @@ def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter
 
     # ----------- SCATTERPLOT -----------
     most_frequent_daily = df_daily.columns[:scatter_stocks_count].values
-    sentiment_cols = [col for col in df.columns if col.endswith("sentiment") and col.split("_")[0] in most_frequent_daily]
+    sentiment_cols = [col for col in df.columns if
+                      col.endswith("sentiment") and col.split("_")[0] in most_frequent_daily]
     df_sentiment = df[sentiment_cols]
     df_sentiment.columns = [s.split("_")[0] for s in sentiment_cols]
 
@@ -134,8 +137,8 @@ def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter
     if not os.path.exists(file_path):
         os.makedirs(file_path)
     plt.savefig(f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}", dpi=dpi)
-    copyfile(   f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}",
-                f"{file_path}/current_{file_name}")
+    copyfile(f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}",
+             f"{file_path}/current_{file_name}")
 
     plt.close()
     plt.clf()
@@ -148,7 +151,6 @@ def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter
 
 
 def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=False, simple_labels=False):
-
     if df is None or len(df) == 0:
         logging.info(f"Dataframe is empty for {value_type} {plot_type} plot.")
         return
@@ -185,7 +187,8 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
     plt.figure(figsize=(20, 10), dpi=dpi)
 
     for symbol in df.columns.values:
-        plt.plot(pd.to_datetime(df.index), df[symbol], label=f"{df[symbol][-1]:.2f} - {stock_label(symbol, simple=simple_labels)}")
+        plt.plot(pd.to_datetime(df.index), df[symbol],
+                 label=f"{df[symbol][-1]:.2f} - {stock_label(symbol, simple=simple_labels)}")
 
     plt.title(f"{value_type.title()} - {plot_type}")
     plt.xlabel("Date")
@@ -200,8 +203,8 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
     if not os.path.exists(file_path):
         os.makedirs(file_path)
     plt.savefig(f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}", dpi=dpi)
-    copyfile(   f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}",
-                f"{file_path}/current_{file_name}")
+    copyfile(f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}",
+             f"{file_path}/current_{file_name}")
 
     plt.close()
     plt.clf()
@@ -280,5 +283,4 @@ def load_sentiment_data():
 
 
 if __name__ == "__main__":
-
     plot_sentiment_charts(simple_labels=False)

@@ -6,18 +6,11 @@ import pickle
 import re
 import sys
 from collections import Counter
-from shutil import copyfile
 
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import praw
 from matplotlib import style
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from wordcloud import WordCloud
-
-import data_loader
-import generate_html
 
 os.chdir(sys.path[0])
 now = dt.datetime.now()
@@ -35,7 +28,8 @@ labels_dict = {}
 
 
 def subreddit_stock_sentiment(debug=False):
-    logging.basicConfig(filename="sentiment_words.log", filemode="w", format=log_format, datefmt=date_format, level=logging.INFO)
+    logging.basicConfig(filename="sentiment_words.log", filemode="w", format=log_format, datefmt=date_format,
+                        level=logging.INFO)
 
     with open("data/sentiment/auth.txt", "r") as f:
         lines = f.readlines()

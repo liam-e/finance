@@ -1,6 +1,7 @@
 import datetime as dt
 import os
 import sys
+
 import markdown
 
 import data_loader
@@ -84,7 +85,7 @@ if __name__ == "__main__":
 def generate_screener_html():
     watchlist = data_loader.watchlist()
 
-    df = stock_screener.screen_stocks(watchlist, remove_screened=False, reload=True)
+    df = stock_screener.screen_stocks(watchlist[:3], remove_screened=False, reload=True)
 
     with open("data/html_snippets/screener_header_snippet.html", "r") as f:
         header_snippet = f.read()
@@ -92,22 +93,46 @@ def generate_screener_html():
     with open("data/html_snippets/screener_footer_snippet.html", "r") as f:
         footer_snippet = f.read()
 
-    html_content = df.to_html(index=False, na_rep="")
+    table = df.to_html(index=False, na_rep="")
 
-    html_content = html_content.replace('<table border="1" class="dataframe">', '<table border="1" class="dataframe tablesorter">')
+    table = table.replace('<table border="1" class="dataframe">', '<table border="1" class="dataframe tablesorter">')
 
-    html_content = html_content.replace("<td>", "<td><div class='table-cell'>")
-    html_content = html_content.replace("</td>", "</div></td>")
+    table = table.replace("<td>", "<td><div class='table-cell'>")
+    table = table.replace("</td>", "</div></td>")
 
-    html_content = html_content.replace("<th>", "<th><div class='table-cell'>")
-    html_content = html_content.replace("</th>", "</div></th>")
+    table = table.replace("<th>", "<th><div class='table-cell'>")
+    table = table.replace("</th>", "</div></th>")
 
-    html_content = html_content.replace("PASS", "<span class='pass'>PASS</span>")
-    html_content = html_content.replace("FAIL", "<span class='fail'>FAIL</span>")
+    table = table.replace("PASS", "<span class='pass'>PASS</span>")
+    table = table.replace("FAIL", "<span class='fail'>FAIL</span>")
 
-    html_content = html_content.replace("NaT", "")
+    table = table.replace("NaT", "")
 
-    html_content = f"\n<header>\n<h1>Daily Briefing</h1>\n<p id='timestamp'>Last updated: {dt.datetime.now().strftime('%A %d %B, %Y at %I:%M:%S %p')}</p>\n</header>\n" + html_content
+    html_content = f"\n<header>\n<h1>Stock screener</h1>\n<p id='timestamp'>Last updated: " \
+                   f"{dt.datetime.now().strftime('%A %d %B, %Y at %I:%M:%S %p')}</p>\n</header>\n" \
+                   f"<h2>Watchlist stocks</h2>" + table
+
+    with open("data/sentiment/top_daily_tickers.txt", "r") as f:
+        reddit_top_symbols = f.read().split("\n")
+
+    df2 = stock_screener.screen_stocks(reddit_top_symbols[:3], remove_screened=False, reload=True)
+
+    table = df2.to_html(index=False, na_rep="")
+
+    table = table.replace('<table border="1" class="dataframe">', '<table border="1" class="dataframe tablesorter">')
+
+    table = table.replace("<td>", "<td><div class='table-cell'>")
+    table = table.replace("</td>", "</div></td>")
+
+    table = table.replace("<th>", "<th><div class='table-cell'>")
+    table = table.replace("</th>", "</div></th>")
+
+    table = table.replace("PASS", "<span class='pass'>PASS</span>")
+    table = table.replace("FAIL", "<span class='fail'>FAIL</span>")
+
+    table = table.replace("NaT", "")
+
+    html_content += "\n<h2>Daily top reddit stocks</h2>\n" + table
 
     html = header_snippet + html_content + footer_snippet
 

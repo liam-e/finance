@@ -75,12 +75,12 @@ def load_price_history(symbol, start_date=dt.datetime(2000, 1, 1), end_date=dt.d
     else:  # don't reload
         df = pd.read_csv(file_path, index_col=0, parse_dates=True)
         try:
-            return df[(pd.to_datetime(df.index).floor('D') >= start_date) & (pd.to_datetime(df.index).floor('D') <= end_date)]
+            return df[
+                (pd.to_datetime(df.index).floor('D') >= start_date) & (pd.to_datetime(df.index).floor('D') <= end_date)]
         except TypeError:
             df = pdr.get_data_yahoo(symbol, start_date, end_date)
             df.reset_index(level=0).to_csv(file_path, index=False, date_format="%Y-%m-%d")
             return df
-
 
 
 def reload_all(symbols, start_date=dt.datetime(2000, 1, 1), end_date=dt.datetime.now()):
