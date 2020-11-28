@@ -150,59 +150,59 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
         logging.info(f"Dataframe is empty for {value_type} {plot_type} plot.")
         return
 
-    # if plot_type == "daily":
-    #     df = df.resample("D").mean()
-    #     df = df[df.index >= df.index[-1] - dt.timedelta(days=30)]
-    # elif plot_type == "hourly":
-    #     df = df.resample("H").mean()
-    #     df = df[df.index >= df.index[-1] - dt.timedelta(days=7)]
-    # elif plot_type == "timeseries":
-    #     df = df
-    #     df = df[df.index >= df.index[-1] - dt.timedelta(days=7)]
-    # else:
-    #     logging.info(f"{plot_type} not supported.")
-    #     return
-    #
-    # if len(df) == 0:
-    #     logging.info(f"Dataframe is empty for {value_type} {plot_type} plot.")
-    #     return
-    #
-    # df.fillna(0, inplace=True)
-    #
-    # df = df.sort_values(df.last_valid_index(), ascending=False, axis=1)
-    #
-    # if value_type == "frequency":
-    #     df = df[df.columns[:stocks_count]]
-    #
-    # plt.figure(figsize=(20, 10), dpi=dpi)
-    #
-    # for symbol in df.columns.values:
-    #     if log:
-    #         y = np.log(df[symbol] - np.min(df[symbol]) + 1)
-    #     else:
-    #         y = df[symbol]
-    #     plt.plot(pd.to_datetime(df.index), y, label=stock_label(symbol, simple=simple_labels))
-    #
-    # plt.title(f"{value_type} - {plot_type}")
-    # plt.xlabel("Date")
-    # if log:
-    #     plt.ylabel(f"log({value_type})")
-    # else:
-    #     plt.ylabel(value_type)
-    # plt.legend(loc="upper left")
-    #
-    # file_path = f"public_html/finance/res/img/sentiment/{value_type}"
-    # file_name = f"{value_type}_{plot_type}_plot.png"
-    # if not os.path.exists(file_path):
-    #     os.makedirs(file_path)
-    # plt.savefig(f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}", dpi=dpi)
-    # copyfile(   f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}",
-    #             f"{file_path}/current_{file_name}")
-    #
-    # plt.close()
-    # plt.clf()
-    #
-    # logging.info(f"{plot_type} plot of {value_type} completed.")
+    if plot_type == "daily":
+        df = df.resample("D").mean()
+        df = df[df.index >= df.index[-1] - dt.timedelta(days=30)]
+    elif plot_type == "hourly":
+        df = df.resample("H").mean()
+        df = df[df.index >= df.index[-1] - dt.timedelta(days=7)]
+    elif plot_type == "timeseries":
+        df = df
+        df = df[df.index >= df.index[-1] - dt.timedelta(days=7)]
+    else:
+        logging.info(f"{plot_type} not supported.")
+        return
+
+    if len(df) == 0:
+        logging.info(f"Dataframe is empty for {value_type} {plot_type} plot.")
+        return
+
+    df.fillna(0, inplace=True)
+
+    df = df.sort_values(df.last_valid_index(), ascending=False, axis=1)
+
+    if value_type == "frequency":
+        df = df[df.columns[:stocks_count]]
+
+    plt.figure(figsize=(20, 10), dpi=dpi)
+
+    for symbol in df.columns.values:
+        if log:
+            y = np.log(df[symbol] - np.min(df[symbol]) + 1)
+        else:
+            y = df[symbol]
+        plt.plot(pd.to_datetime(df.index), y, label=stock_label(symbol, simple=simple_labels))
+
+    plt.title(f"{value_type} - {plot_type}")
+    plt.xlabel("Date")
+    if log:
+        plt.ylabel(f"log({value_type})")
+    else:
+        plt.ylabel(value_type)
+    plt.legend(loc="upper left")
+
+    file_path = f"public_html/finance/res/img/sentiment/{value_type}"
+    file_name = f"{value_type}_{plot_type}_plot.png"
+    if not os.path.exists(file_path):
+        os.makedirs(file_path)
+    plt.savefig(f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}", dpi=dpi)
+    copyfile(   f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}",
+                f"{file_path}/current_{file_name}")
+
+    plt.close()
+    plt.clf()
+
+    logging.info(f"{plot_type} plot of {value_type} completed.")
 
 
 def stock_label(symbol, simple=False):
@@ -277,4 +277,4 @@ def load_sentiment_data():
 
 if __name__ == "__main__":
 
-    plot_sentiment_charts(simple_labels=True)
+    plot_sentiment_charts(simple_labels=False)
