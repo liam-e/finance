@@ -27,13 +27,18 @@ labels_dict = {}
 
 
 def analyse_sentiment(debug=False):
-    file_path = f"data/sentiment/reddit_sentiment.csv"
+    df_file_path = f"data/sentiment/reddit_sentiment.csv"
 
-    if not debug:
+    headlines_file_path = "data/sentiment/reddit_headlines.p"
+
+    if not debug or not os.path.isfile(headlines_file_path):
         # DOWNLOAD REDDIT HEADLINES
         with open("data/sentiment/auth.txt", "r") as f:
             auth_list = f.read().split("\n")
-            client_id, client_secret, username, subreddit = auth_list
+            client_id = auth_list[0]
+            client_secret = auth_list[1]
+            username = auth_list[2]
+            subreddit = auth_list[3]
 
         reddit = praw.Reddit(client_id=client_id,
                              client_secret=client_secret,
@@ -41,14 +46,14 @@ def analyse_sentiment(debug=False):
 
         headlines = set()
 
-        for submission in reddit.subreddit("wallstreetbets").new(limit=None):
+        for submission in reddit.subreddit(subreddit).new(limit=None):
             headlines.add(submission.title)
 
-        with open("data/sentiment/reddit_headlines.p", "wb") as f:
+        with open(headlines_file_path, "wb") as f:
             pickle.dump(headlines, f)
 
     else:
-        with open("data/sentiment/reddit_headlines.p", "rb") as f:
+        with open(headlines_file_path, "rb") as f:
             headlines = pickle.load(f)
 
     # REMOVE WORDS THAT AREN'T TICKERS
@@ -101,8 +106,8 @@ def analyse_sentiment(debug=False):
             if symbol in stripped_headlines[i]:
                 sentiment_dict[symbol]["sentiment"] += sentiment_score
 
-    if os.path.isfile(file_path):
-        df = pd.read_csv(file_path, parse_dates=True)
+    if os.path.isfile(df_file_path):
+        df = pd.read_csv(df_file_path, parse_dates=True)
     else:
         df = pd.DataFrame()
 
