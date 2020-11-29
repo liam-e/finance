@@ -22,8 +22,8 @@ def date_parse(d):
 
 def load_price_history(symbol, start_date=dt.datetime(2000, 1, 1), end_date=dt.datetime.now(), market="us",
                        reload=True):
-    today = dt.datetime.now()
-
+    now = dt.datetime.now()
+    symbol = symbol.lower().strip()
     symbol_filename = "-".join(symbol.split("."))
 
     file_path = f"data/{market}/price_history/{symbol_filename}.csv"
@@ -47,7 +47,7 @@ def load_price_history(symbol, start_date=dt.datetime(2000, 1, 1), end_date=dt.d
                     df_old = pd.concat([df_older, df_old])
 
                 df_old = df_old[df_old.index < lastest_saved_date]
-                df_new = pdr.get_data_yahoo(symbol, lastest_saved_date, today)
+                df_new = pdr.get_data_yahoo(symbol, lastest_saved_date, now)
                 df_new = df_new[df_new.index >= lastest_saved_date]
                 df_new = df_new[~df_new.index.duplicated(keep="first")]
                 df = pd.concat([df_old, df_new])
@@ -97,6 +97,9 @@ def reload_sandp500():
 
 
 def load_ticker_info(symbol, market="us", type_str="info", reload=False):
+
+    symbol = symbol.lower().strip()
+
     if type_str in ["info", "isin", "options"]:
         extn = "json"
     else:
