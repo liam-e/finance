@@ -218,5 +218,5 @@ def monthly(df):
 
 
 def watchlist():
-    return ["abb", "ride", "aapl", "btl", "bah", "kmb", "cl", "sne", "ndaq", "tot", "rok",
-            "tpw.nz", "vgl.nz"]
+    with open("data/watchlist.txt", "r") as f:
+        return f.read().split("\n")

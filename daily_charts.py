@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import datetime as dt
 import glob
-import logging
 import os
 import sys
-
 import pandas as pd
+from time import time
 
 import data_loader
+import finance_logger
 import generate_html
 import ohlc
 
@@ -19,10 +19,12 @@ date_file_format = '%Y_%m_%d'
 date_format = "%d/%m/%Y %H:%M:%S"
 log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
-if __name__ == "__main__":
+script_name = os.path.basename(__file__)
 
-    logging.basicConfig(filename="sentiment_words.log", filemode="w", format=log_format, datefmt=date_format,
-                        level=logging.INFO)
+
+def generate_daily_charts(debug=False):
+    start = time()
+    finance_logger.setup_log_script(script_name)
 
     charts_path = "public_html/finance/res/img/ohlc"
 
@@ -33,18 +35,14 @@ if __name__ == "__main__":
 
     watchlist = data_loader.watchlist()
 
-    print("Making watchlist charts...")
-    logging.info("Making watchlist charts...")
+    if debug:
+        watchlist = watchlist[:1]
 
     for symbol in watchlist:
         ohlc.indicator_chart(symbol, directory="watchlist")
 
     # REDDIT SENTIMENT
-    with open("data/sentiment/auth.txt", "r") as f:
-        lines = f.readlines()
-        subreddit = lines[3].strip()
-
-    file_path = f"data/sentiment/{subreddit}_sentiment.csv"
+    file_path = f"data/sentiment/reddit_sentiment.csv"
 
     if os.path.isfile(file_path):
         df = pd.read_csv(file_path, index_col=0, parse_dates=True)
@@ -56,8 +54,8 @@ if __name__ == "__main__":
         with open("data/sentiment/top_daily_tickers.txt", "r") as f:
             sentiment_tickers = f.read().split("\n")
 
-        print("Making sentiment charts...")
-        logging.info("Making sentiment charts...")
+        if debug:
+            sentiment_tickers = sentiment_tickers[:1]
 
         for i, symbol in enumerate(sentiment_tickers):
 
@@ -71,7 +69,11 @@ if __name__ == "__main__":
 
         generate_html.generate_ohlc_html()
 
-        print("Success.")
-        logging.info("Success.")
+    generate_html.generate_screener_html(debug=debug)
 
-        generate_html.generate_screener_html()
+    finance_logger.append_log("success", script_name=script_name)
+    finance_logger.log_time_taken(time() - start, os.path.basename(__file__))
+
+
+if __name__ == "__main__":
+    generate_daily_charts()

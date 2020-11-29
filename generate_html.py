@@ -1,18 +1,24 @@
 import datetime as dt
 import os
 import sys
-
+from time import time
 import markdown
 
 import data_loader
+import finance_logger
 import stock_screener
 
 os.chdir(sys.path[0])
+script_name = os.path.basename(__file__)
 
 
 def markdown_to_html(input_file):
     with open(input_file, "r") as f:
         return markdown.markdown(f.read())
+
+
+def time_updated_tag():
+    return f"<p id='timestamp'>Last updated: {dt.datetime.now().strftime('%A, %d %B, %Y at %I:%M:%S %p')}</p>"
 
 
 def generate_sentiment_html():
@@ -26,7 +32,7 @@ def generate_sentiment_html():
 
     html_root_path = "../res/img/sentiment"
 
-    html_content = f"\n<header>\n<h1>Reddit stock sentiment</h1>\n<p id='timestamp'>Last updated: {dt.datetime.now().strftime('%A %d %B, %Y at %I:%M:%S %p')}</p>\n</header>\n"
+    html_content = f"\n<header>\n<h1>Reddit stock sentiment</h1>\n{time_updated_tag()}\n</header>\n"
 
     for root, subdirs, files in os.walk(root_path):
         for subdir in subdirs:
@@ -57,8 +63,7 @@ def generate_ohlc_html():
 
     html_root_path = "../res/img/ohlc"
 
-    html_content = f"\n<header>\n<h1>Daily Briefing</h1>\n<h2>Showing candlestick graphs for now.</h2>\n" \
-                   f"<p id='timestamp'>Last updated: {dt.datetime.now().strftime('%A %d %B, %Y at %I:%M:%S %p')}</p>\n</header>\n"
+    html_content = f"\n<header>\n<h1>Daily Charts</h1>\n{time_updated_tag()}\n</header>\n"
 
     for subdir in ["watchlist", "reddit_sentiment"]:
         subheading = " ".join(subdir.title().split("_"))
@@ -72,18 +77,15 @@ def generate_ohlc_html():
 
     html = header_snippet + html_content + footer_snippet
 
-    with open("public_html/finance/daily_briefing/index.html", "w") as f:
+    with open("public_html/finance/daily_charts/index.html", "w") as f:
         f.write(html)
 
 
-if __name__ == "__main__":
-    generate_sentiment_html()
-    generate_ohlc_html()
-    generate_sentiment_html()
-
-
-def generate_screener_html():
+def generate_screener_html(debug=False):
     watchlist = data_loader.watchlist()
+
+    if debug:
+        watchlist = watchlist[:1]
 
     df = stock_screener.screen_stocks(watchlist, remove_screened=False, reload=True)
 
@@ -108,12 +110,14 @@ def generate_screener_html():
 
     table = table.replace("NaT", "")
 
-    html_content = f"\n<header>\n<h1>Stock screener</h1>\n<p id='timestamp'>Last updated: " \
-                   f"{dt.datetime.now().strftime('%A %d %B, %Y at %I:%M:%S %p')}</p>\n</header>\n" \
+    html_content = f"\n<header>\n<h1>Stock screener</h1>\n{time_updated_tag()}\n</header>\n" \
                    f"<h2>Watchlist stocks</h2>" + table
 
     with open("data/sentiment/top_daily_tickers.txt", "r") as f:
         reddit_top_symbols = f.read().split("\n")
+
+    if debug:
+        reddit_top_symbols = reddit_top_symbols[:1]
 
     df2 = stock_screener.screen_stocks(reddit_top_symbols, remove_screened=False, reload=True)
 
@@ -138,3 +142,19 @@ def generate_screener_html():
 
     with open("public_html/finance/screener/index.html", "w") as f:
         f.write(html)
+
+
+def generate_all_html(debug=False):
+    start = time()
+    finance_logger.setup_log_script(script_name)
+
+    generate_sentiment_html()
+    generate_ohlc_html()
+    generate_screener_html(debug=debug)
+
+    finance_logger.append_log("success", script_name=script_name)
+    finance_logger.log_time_taken(time() - start, os.path.basename(__file__))
+
+
+if __name__ == "__main__":
+    generate_all_html()

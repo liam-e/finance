@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 import datetime as dt
-import logging
 import os
 import pickle
 import re
 import sys
 from collections import Counter
-
+from pprint import pprint
+from time import time
 import pandas as pd
 import praw
 from matplotlib import style
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
+import finance_logger
 
 os.chdir(sys.path[0])
 now = dt.datetime.now()
@@ -18,105 +20,88 @@ date_format = '%d/%m/%Y %H:%M:%S'
 datetime_file_format = '%Y_%m_%d_%H_%M_%S'
 date_hour_file_format = "%Y_%m_%d_%H"
 date_file_format = '%Y_%m_%d'
-log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-
 regex = re.compile('[^a-zA-Z ]')
-
 style.use("dark_background")
-
 labels_dict = {}
 
+script_name = os.path.basename(__file__)
 
-def subreddit_stock_sentiment(debug=False):
-    logging.basicConfig(filename="sentiment_words.log", filemode="w", format=log_format, datefmt=date_format,
-                        level=logging.INFO)
 
-    with open("data/sentiment/auth.txt", "r") as f:
-        lines = f.readlines()
-        client_id = lines[0].strip()
-        client_secret = lines[1].strip()
-        username = lines[2].strip()
-        subreddit = lines[3].strip()
+def analyse_sentiment(debug=False):
+    start = time()
 
-    file_path = f"data/sentiment/{subreddit}_sentiment.csv"
+    finance_logger.setup_log_script(script_name)
 
-    logging.info("Downloading reddit headlines...")
+    file_path = f"data/sentiment/reddit_sentiment.csv"
 
-    reddit = praw.Reddit(client_id=client_id,
-                         client_secret=client_secret,
-                         user_agent=username)
+    if not debug:
+        # DOWNLOAD REDDIT HEADLINES
+        with open("data/sentiment/auth.txt", "r") as f:
+            auth_list = f.read().split("\n")
+            client_id, client_secret, username, subreddit = auth_list
 
-    headlines = set()
+        reddit = praw.Reddit(client_id=client_id,
+                             client_secret=client_secret,
+                             user_agent=username)
 
-    for submission in reddit.subreddit(subreddit).new(limit=None):
-        headlines.add(submission.title)
+        headlines = set()
 
-    logging.info("Counting words...")
+        for submission in reddit.subreddit("wallstreetbets").new(limit=None):
+            headlines.add(submission.title)
 
+        with open("data/sentiment/reddit_headlines.p", "wb") as f:
+            pickle.dump(headlines, f)
+
+    else:
+        with open("data/sentiment/reddit_headlines.p", "rb") as f:
+            headlines = pickle.load(f)
+
+    # REMOVE WORDS THAT AREN'T TICKERS
     with open("data/all_symbols.p", "rb") as f:
         all_symbols = pickle.load(f)
 
     with open("data/sentiment/words_to_remove.p", "rb") as f:
         words_to_remove = pickle.load(f)
 
-    sia = SentimentIntensityAnalyzer()
-    results = []
     word_list = []
 
+    ticker_headlines = []
     stripped_headlines = []
 
     for line in headlines:
-        line_list = [s.strip() for s in regex.sub('', line).lower().split(" ")]
-        stripped_headlines.append(line_list)
-        word_list += line_list
+        line_list = [s for s in [s.strip() for s in regex.sub('', line).split(" ")] if s.isupper() and s in all_symbols and s not in words_to_remove]
+        if line_list:
+            line_set = set(line_list)
+            stripped_headlines.append(line_set)
+            word_list += line_list
+            ticker_headlines.append(line)
 
     word_freqs = Counter(word_list).most_common()
 
-    symbols_dict = {}
-    symbols_list = []
-
+    sentiment_dict = {}
     for word_freq in word_freqs:
         symbol = word_freq[0]
-        freq = word_freq[1]
+        if word_freq[1] > 1:
+            sentiment_dict[symbol] = {
+                "symbol": symbol,
+                "frequency": word_freq[1],
+                "sentiment": 0,
+            }
 
-        if symbol not in words_to_remove:
-            if freq > 1 and symbol in all_symbols:
-                symbols_dict[symbol] = freq
-                symbols_list.append(symbol)
+    symbols_set = set(sentiment_dict.keys())
 
-    sentiment_dict = {}
-    for symbol, frequency in symbols_dict.items():
-        symbol_dict = {
-            "symbol": symbol,
-            "word_frequency": frequency,
-            "sentiment": 0,
-            "sentiment_frequency": 0
-        }
-        sentiment_dict[symbol] = symbol_dict
+    # ANALYSE TICKER SENTIMENT
+    sia = SentimentIntensityAnalyzer()
 
-    for i, line in enumerate(headlines):
+    for i, line in enumerate(ticker_headlines):
         pol_score = sia.polarity_scores(line)
-        pol_score['headline'] = line
-        results.append(pol_score)
-
         sentiment_score = pol_score["compound"]
-
-        mentioned_stocks = []
-        for symbol in symbols_list:
+        if -0.3 < sentiment_score < 0.3:
+            continue
+        pol_score['headline'] = line
+        for symbol in symbols_set:
             if symbol in stripped_headlines[i]:
                 sentiment_dict[symbol]["sentiment"] += sentiment_score
-                sentiment_dict[symbol]["sentiment_frequency"] += 1
-                mentioned_stocks.append(symbol)
-
-    sentiment_list = list(sentiment_dict.values())
-
-    new_df = pd.DataFrame.from_records(sentiment_list)
-
-    new_df.sort_values(by="word_frequency", ascending=False, inplace=True)
-
-    new_df["sentiment"] = new_df["sentiment"] / new_df["sentiment_frequency"]
-
-    new_df = new_df[["symbol", "word_frequency", "sentiment"]]
 
     if os.path.isfile(file_path):
         df = pd.read_csv(file_path, parse_dates=True)
@@ -125,24 +110,23 @@ def subreddit_stock_sentiment(debug=False):
 
     row_index = len(df)
 
-    for i, row in new_df.iterrows():
-        symbol = row["symbol"]
+    df.loc[row_index, "Date"] = now
 
-        df.loc[row_index, "Date"] = now
-        df.loc[row_index, f"{symbol}_frequency"] = row["word_frequency"]
-        df.loc[row_index, f"{symbol}_sentiment"] = row["sentiment"]
+    for entry in sentiment_dict.values():
+        symbol = entry["symbol"]
+        df.loc[row_index, f"{symbol}_frequency"] = entry["frequency"]
+        df.loc[row_index, f"{symbol}_sentiment"] = entry["sentiment"] / entry["frequency"]
 
-    df.fillna(0, inplace=True)
-
-    date_col = pd.to_datetime(df["Date"])
+    date_col = df["Date"]
     df = df.drop("Date", 1)
     df.sort_values(df.last_valid_index(), ascending=False, axis=1, inplace=True)
-    df.index = date_col
+    df.insert(0, "Date", date_col)
 
     if not debug:
-        df.reset_index(level=0).to_csv(f"data/sentiment/{subreddit}_sentiment.csv", index=False)
+        df.to_csv(f"data/sentiment/reddit_sentiment.csv", index=False)
 
-    logging.info("Success.")
+    finance_logger.append_log("success", script_name=script_name)
+    finance_logger.log_time_taken(time() - start, script_name)
 
 
 def add_words_to_remove(more_words):
@@ -159,4 +143,4 @@ def add_words_to_remove(more_words):
 if __name__ == "__main__":
     # add_words_to_remove([])
 
-    subreddit_stock_sentiment(debug=False)
+    analyse_sentiment(debug=True)

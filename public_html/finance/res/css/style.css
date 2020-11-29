@@ -1,6 +1,7 @@
 * {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
 html {
@@ -38,16 +39,32 @@ th .table-cell {
 }
 
 td {
-    height: 3em;
+    height: 2.5em;
+
 }
 
 .table-cell {
+    margin: 0.5em;
     width: 7em;
     overflow: hidden;
 }
 
 .dataframe {
     border-collapse: collapse;
+    border: none;
+}
+
+th, td, tr, thead, tbody {
+    border: none;
+    border-collapse: collapse;
+}
+
+tbody tr {
+    border-bottom: 1px solid #bbb;
+}
+
+tbody td {
+    border-left: 1px solid #333;
 }
 
 .dataframe td:first-child .table-cell {
@@ -71,13 +88,13 @@ td {
 }
 
 a {
-    color: #30a14e;
-    display: block;
-    padding: 1em;
+    color: #3dc661;
+    /*display: block;*/
+    padding: 0.5em;
+    font-size: 1.25em;
 }
 
-nav li {
+nav ul li {
+    padding: 0.5em;
     list-style: none;
-    display: block;
-    margin: 0.5em;
 }
