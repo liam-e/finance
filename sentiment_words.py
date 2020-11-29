@@ -4,6 +4,7 @@ import os
 import pickle
 import re
 import sys
+import traceback
 from collections import Counter
 from time import time
 
@@ -138,13 +139,16 @@ def main(debug=False):
     script_name = os.path.basename(__file__)
     start = time()
     finance_logger.setup_log_script(script_name)
+
     try:
         analyse_sentiment(debug=debug)
         finance_logger.append_log("success", script_name=script_name)
         finance_logger.log_time_taken(time() - start, script_name)
     except:
+        traceback.print_exc()
         finance_logger.append_log("failure", script_name=script_name)
 
 
 if __name__ == "__main__":
     main(debug=False)
+

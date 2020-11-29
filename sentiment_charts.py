@@ -2,6 +2,7 @@
 import datetime as dt
 import os
 import sys
+import traceback
 from shutil import copyfile
 from time import time
 
@@ -278,6 +279,7 @@ def main(debug=False):
         finance_logger.append_log("success", script_name=script_name)
         finance_logger.log_time_taken(time() - start, script_name)
     except:
+        traceback.print_exc()
         finance_logger.append_log("failure", script_name=script_name)
 
 
