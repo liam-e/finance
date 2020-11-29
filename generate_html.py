@@ -157,4 +157,4 @@ def generate_all_html(debug=False):
 
 
 if __name__ == "__main__":
-    generate_all_html()
+    generate_all_html(debug=False)

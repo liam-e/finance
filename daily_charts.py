@@ -76,4 +76,4 @@ def generate_daily_charts(debug=False):
 
 
 if __name__ == "__main__":
-    generate_daily_charts()
+    generate_daily_charts(debug=False)

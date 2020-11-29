@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import datetime as dt
-import logging
 import os
 import sys
 from shutil import copyfile
-
+from time import time
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -12,6 +11,7 @@ from matplotlib import style
 from wordcloud import WordCloud
 
 import data_loader
+import finance_logger
 import generate_html
 
 os.chdir(sys.path[0])
@@ -26,10 +26,13 @@ style.use("dark_background")
 
 labels_dict = {}
 
+script_name = os.path.basename(__file__)
 
-def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter_stocks_count=30):
-    logging.basicConfig(filename="sentiment_charts.log", filemode="w", format=log_format, datefmt=date_format,
-                        level=logging.INFO)
+
+def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_count=30):
+    start = time()
+    simple_labels = debug
+    finance_logger.setup_log_script(script_name)
 
     df = load_sentiment_data()
 
@@ -38,11 +41,15 @@ def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter
 
     # df.fillna(0, inplace=True)
 
+    # print(df.head())
+
     df.sort_values(df.last_valid_index(), ascending=False, axis=1, inplace=True)
 
     frequency_cols = [col for col in df.columns if col.endswith("frequency")]
     df_freqency = df[frequency_cols]
     df_freqency.columns = [s.split("_")[0] for s in frequency_cols]
+
+    # print(df_freqency)
 
     most_frequent = df_freqency.columns[:stocks_count]
 
@@ -53,8 +60,6 @@ def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter
     df_hourly = df_freqency.resample("H").mean()
     df_hourly.sort_values(df_hourly.last_valid_index(), ascending=False, axis=1, inplace=True)
     most_frequent_hourly = df_hourly.columns[:stocks_count].values
-
-    logging.info("Generating charts...")
 
     log_values = True
 
@@ -143,16 +148,14 @@ def plot_sentiment_charts(dpi=150, simple_labels=False, stocks_count=10, scatter
     plt.close()
     plt.clf()
 
-    logging.info(f"scatter plot of sentiment completed.")
-    logging.info(f"Scatter plot completed.")
-
     generate_html.generate_sentiment_html()
-    logging.info("Success.")
+
+    finance_logger.append_log("success", script_name=script_name)
+    finance_logger.log_time_taken(time() - start, os.path.basename(__file__))
 
 
 def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=False, simple_labels=False):
     if df is None or len(df) == 0:
-        logging.info(f"Dataframe is empty for {value_type} {plot_type} plot.")
         return
 
     if plot_type == "daily":
@@ -166,21 +169,15 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
         df = df
         df = df[df.index >= df.index[-1] - dt.timedelta(days=7)]
     else:
-        logging.info(f"{plot_type} not supported.")
         return
 
     if len(df) == 0:
-        logging.info(f"Dataframe is empty for {value_type} {plot_type} plot.")
         return
 
-    df.replace(0, np.nan, inplace=True)
+    # df.replace(0, np.nan, inplace=True)
 
     if value_type == "frequency":
         df = df[df.columns[:stocks_count]]
-
-    if log:
-        for symbol in df.columns.values:
-            df[symbol] = np.log(df[symbol] - np.min(df[symbol]) + 1)
 
     df = df.sort_values(df.last_valid_index(), ascending=False, axis=1)
 
@@ -193,6 +190,7 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
     plt.title(f"{value_type.title()} - {plot_type}")
     plt.xlabel("Date")
     if log:
+        plt.yscale("log")
         plt.ylabel(f"log({value_type})")
     else:
         plt.ylabel(value_type)
@@ -208,8 +206,6 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
 
     plt.close()
     plt.clf()
-
-    logging.info(f"{plot_type} plot of {value_type} completed.")
 
 
 def stock_label(symbol, simple=False):
@@ -272,15 +268,11 @@ def save_image(data, filename, dpi=150):
 
 
 def load_sentiment_data():
-    with open("data/sentiment/auth.txt", "r") as f:
-        lines = f.readlines()
-        subreddit = lines[3].strip()
-
-    file_path = f"data/sentiment/{subreddit}_sentiment.csv"
+    file_path = f"data/sentiment/reddit_sentiment.csv"
 
     if os.path.isfile(file_path):
         return pd.read_csv(file_path, index_col=0, parse_dates=True)
 
 
 if __name__ == "__main__":
-    plot_sentiment_charts(simple_labels=False)
+    plot_sentiment_charts(debug=False)

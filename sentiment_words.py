@@ -143,4 +143,4 @@ def add_words_to_remove(more_words):
 if __name__ == "__main__":
     # add_words_to_remove([])
 
-    analyse_sentiment(debug=True)
+    analyse_sentiment(debug=False)
