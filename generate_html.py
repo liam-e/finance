@@ -2,6 +2,7 @@ import datetime as dt
 import os
 import sys
 from time import time
+
 import markdown
 
 import data_loader
@@ -9,7 +10,6 @@ import finance_logger
 import stock_screener
 
 os.chdir(sys.path[0])
-script_name = os.path.basename(__file__)
 
 
 def markdown_to_html(input_file):
@@ -145,16 +145,23 @@ def generate_screener_html(debug=False):
 
 
 def generate_all_html(debug=False):
-    start = time()
-    finance_logger.setup_log_script(script_name)
-
     generate_sentiment_html()
     generate_ohlc_html()
     generate_screener_html(debug=debug)
 
-    finance_logger.append_log("success", script_name=script_name)
-    finance_logger.log_time_taken(time() - start, os.path.basename(__file__))
+
+def main(debug=False):
+    script_name = os.path.basename(__file__)
+    start = time()
+    finance_logger.setup_log_script(script_name)
+
+    try:
+        generate_all_html(debug=debug)
+        finance_logger.append_log("success", script_name=script_name)
+        finance_logger.log_time_taken(time() - start, script_name)
+    except:
+        finance_logger.append_log("failure", script_name=script_name)
 
 
 if __name__ == "__main__":
-    generate_all_html(debug=False)
+    main(debug=False)

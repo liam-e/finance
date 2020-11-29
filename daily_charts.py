@@ -3,8 +3,9 @@ import datetime as dt
 import glob
 import os
 import sys
-import pandas as pd
 from time import time
+
+import pandas as pd
 
 import data_loader
 import finance_logger
@@ -19,13 +20,8 @@ date_file_format = '%Y_%m_%d'
 date_format = "%d/%m/%Y %H:%M:%S"
 log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
-script_name = os.path.basename(__file__)
-
 
 def generate_daily_charts(debug=False):
-    start = time()
-    finance_logger.setup_log_script(script_name)
-
     charts_path = "public_html/finance/res/img/ohlc"
 
     # WATCHLIST
@@ -71,9 +67,19 @@ def generate_daily_charts(debug=False):
 
     generate_html.generate_screener_html(debug=debug)
 
-    finance_logger.append_log("success", script_name=script_name)
-    finance_logger.log_time_taken(time() - start, os.path.basename(__file__))
+
+def main(debug=False):
+    script_name = os.path.basename(__file__)
+    start = time()
+    finance_logger.setup_log_script(script_name)
+
+    try:
+        generate_daily_charts(debug=debug)
+        finance_logger.append_log("success", script_name=script_name)
+        finance_logger.log_time_taken(time() - start, script_name)
+    except:
+        finance_logger.append_log("failure", script_name=script_name)
 
 
 if __name__ == "__main__":
-    generate_daily_charts(debug=False)
+    main(debug=False)

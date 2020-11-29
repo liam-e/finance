@@ -4,6 +4,7 @@ import os
 import sys
 from shutil import copyfile
 from time import time
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -26,13 +27,9 @@ style.use("dark_background")
 
 labels_dict = {}
 
-script_name = os.path.basename(__file__)
-
 
 def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_count=30):
-    start = time()
     simple_labels = debug
-    finance_logger.setup_log_script(script_name)
 
     df = load_sentiment_data()
 
@@ -149,9 +146,6 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
     plt.clf()
 
     generate_html.generate_sentiment_html()
-
-    finance_logger.append_log("success", script_name=script_name)
-    finance_logger.log_time_taken(time() - start, os.path.basename(__file__))
 
 
 def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=False, simple_labels=False):
@@ -274,5 +268,18 @@ def load_sentiment_data():
         return pd.read_csv(file_path, index_col=0, parse_dates=True)
 
 
+def main(debug=False):
+    script_name = os.path.basename(__file__)
+    start = time()
+    finance_logger.setup_log_script(script_name)
+
+    try:
+        plot_sentiment_charts(debug=debug)
+        finance_logger.append_log("success", script_name=script_name)
+        finance_logger.log_time_taken(time() - start, script_name)
+    except:
+        finance_logger.append_log("failure", script_name=script_name)
+
+
 if __name__ == "__main__":
-    plot_sentiment_charts(debug=False)
+    main(debug=False)

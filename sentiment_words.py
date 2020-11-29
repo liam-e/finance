@@ -5,8 +5,8 @@ import pickle
 import re
 import sys
 from collections import Counter
-from pprint import pprint
 from time import time
+
 import pandas as pd
 import praw
 from matplotlib import style
@@ -24,14 +24,8 @@ regex = re.compile('[^a-zA-Z ]')
 style.use("dark_background")
 labels_dict = {}
 
-script_name = os.path.basename(__file__)
-
 
 def analyse_sentiment(debug=False):
-    start = time()
-
-    finance_logger.setup_log_script(script_name)
-
     file_path = f"data/sentiment/reddit_sentiment.csv"
 
     if not debug:
@@ -60,6 +54,8 @@ def analyse_sentiment(debug=False):
     with open("data/all_symbols.p", "rb") as f:
         all_symbols = pickle.load(f)
 
+    # add_words_to_remove([])
+
     with open("data/sentiment/words_to_remove.p", "rb") as f:
         words_to_remove = pickle.load(f)
 
@@ -69,7 +65,8 @@ def analyse_sentiment(debug=False):
     stripped_headlines = []
 
     for line in headlines:
-        line_list = [s for s in [s.strip() for s in regex.sub('', line).split(" ")] if s.isupper() and s in all_symbols and s not in words_to_remove]
+        line_list = [s for s in [s.strip() for s in regex.sub('', line).split(" ")] if
+                     s.isupper() and s in all_symbols and s not in words_to_remove]
         if line_list:
             line_set = set(line_list)
             stripped_headlines.append(line_set)
@@ -125,9 +122,6 @@ def analyse_sentiment(debug=False):
     if not debug:
         df.to_csv(f"data/sentiment/reddit_sentiment.csv", index=False)
 
-    finance_logger.append_log("success", script_name=script_name)
-    finance_logger.log_time_taken(time() - start, script_name)
-
 
 def add_words_to_remove(more_words):
     with open("data/sentiment/words_to_remove.p", "rb") as f:
@@ -140,7 +134,17 @@ def add_words_to_remove(more_words):
         pickle.dump(words_to_remove, f)
 
 
-if __name__ == "__main__":
-    # add_words_to_remove([])
+def main(debug=False):
+    script_name = os.path.basename(__file__)
+    start = time()
+    finance_logger.setup_log_script(script_name)
+    try:
+        analyse_sentiment(debug=debug)
+        finance_logger.append_log("success", script_name=script_name)
+        finance_logger.log_time_taken(time() - start, script_name)
+    except:
+        finance_logger.append_log("failure", script_name=script_name)
 
-    analyse_sentiment(debug=False)
+
+if __name__ == "__main__":
+    main(debug=False)

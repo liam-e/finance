@@ -4,7 +4,6 @@ from sys import platform
 
 formatter = logging.Formatter(f'%(asctime)s - {platform} - %(levelname)s - %(message)s')
 
-
 logger_dict = {}
 
 
