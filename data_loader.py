@@ -29,7 +29,7 @@ def load_price_history(symbol, start_date=dt.datetime(2000, 1, 1), end_date=dt.d
     file_path = f"data/{market}/price_history/{symbol_filename}.csv"
     if reload:
         if os.path.isfile(file_path):  # download only data from one day after latest date in csv
-            df_old = pd.read_csv(file_path, index_col=0, parse_dates=True, date_parser=date_parse)
+            df_old = pd.read_csv(file_path, index_col=0, parse_dates=True)
 
             if len(df_old) == 0:
                 df = pdr.get_data_yahoo(symbol, start_date, end_date)
@@ -97,7 +97,6 @@ def reload_sandp500():
 
 
 def load_ticker_info(symbol, market="us", type_str="info", reload=False):
-
     symbol = symbol.lower().strip()
 
     if type_str in ["info", "isin", "options"]:
@@ -221,5 +220,5 @@ def monthly(df):
 
 
 def watchlist():
-    with open("data/watchlist.txt", "r") as f:
+    with open("data/watchlist2.txt", "r") as f:
         return f.read().split("\n")

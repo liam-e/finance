@@ -35,17 +35,15 @@ def generate_sentiment_html():
 
     html_content = f"\n<header>\n<h1>Reddit stock sentiment</h1>\n{time_updated_tag()}\n</header>\n"
 
-    for root, subdirs, files in os.walk(root_path):
-        for subdir in subdirs:
-            subheading = " ".join(subdir.title().split("_"))
-            html_content += f"\n<h3>{subheading}</h3>\n"
-            for root2, subdirs2, files2 in os.walk(f"{root_path}/{subdir}"):
-                for file in files2:
-                    if file.startswith("current"):
-                        img_path = f"{html_root_path}/{subdir}/{file}"
-                        img_name = f"{subdir.title()} {img_path.split('_')[-2]} plot"
-                        img_tag = f"<div class='imgbox'><img class='center-fit' src='{img_path}' alt='{img_name}'/></div>\n"
-                        html_content += img_tag
+    for subdir in ["sentiment", "frequency"]:
+        subheading = " ".join(subdir.title().split("_"))
+        html_content += f"\n<h2>{subheading}</h2>\n"
+        for root, subdirs, files in os.walk(f"{root_path}/{subdir}"):
+            for file in files:
+                img_path = f"{html_root_path}/{subdir}/{file}"
+                img_name = f"{subdir.title()} {img_path.split('_')[-2]} plot"
+                img_tag = f"<div class='imgbox'><img class='center-fit' src='{img_path}' alt='{img_name}'/></div>\n"
+                html_content += img_tag
 
     html = header_snippet + html_content + footer_snippet
 
@@ -167,4 +165,3 @@ def main(debug=False):
 
 if __name__ == "__main__":
     main(debug=False)
-

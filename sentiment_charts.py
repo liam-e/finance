@@ -3,7 +3,6 @@ import datetime as dt
 import os
 import sys
 import traceback
-from shutil import copyfile
 from time import time
 
 import matplotlib.pyplot as plt
@@ -112,9 +111,9 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
 
     df["log_frequency"] = np.log(df["frequency"])
 
-    df_positive = df[df["sentiment"] >= 0.1]
-    df_neutral = df[(df["sentiment"] < 0.1) & (df["sentiment"] > -0.1)]
-    df_negative = df[df["sentiment"] <= -0.1]
+    df_positive = df[df["sentiment"] >= 0.3]
+    df_neutral = df[(df["sentiment"] < 0.3) & (df["sentiment"] > -0.3)]
+    df_negative = df[df["sentiment"] <= -0.3]
 
     plt.scatter(df_positive["log_frequency"], df_positive["sentiment"], marker="o", color="green")
     plt.scatter(df_neutral["log_frequency"], df_neutral["sentiment"], marker="o", color="gold")
@@ -128,20 +127,18 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
             color="white"
         )
 
-    plt.title("Scatter plot - most recent day")
+    plt.title(f"Scatter plot - daily - {now.strftime(date_format)}")
     # plt.xscale("log")
     # plt.yscale("log")
     plt.xlabel("log(frequency)")
     plt.ylabel("sentiment score")
 
     file_path = f"public_html/finance/res/img/sentiment/sentiment"
-    file_name = f"sentiment_scatter_plot.png"
+    file_name = f"a_sentiment_daily_scatter_plot.png"
 
     if not os.path.exists(file_path):
         os.makedirs(file_path)
-    plt.savefig(f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}", dpi=dpi)
-    copyfile(f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}",
-             f"{file_path}/current_{file_name}")
+    plt.savefig(f"{file_path}/{file_name}", dpi=dpi)
 
     plt.close()
     plt.clf()
@@ -182,22 +179,26 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
         plt.plot(pd.to_datetime(df.index), df[symbol],
                  label=f"{df[symbol][-1]:.2f} - {stock_label(symbol, simple=simple_labels)}")
 
-    plt.title(f"{value_type.title()} - {plot_type}")
+    plt.title(f"{value_type.title()} - {plot_type} - {now.strftime(date_format)}")
     plt.xlabel("Date")
     if log:
         plt.yscale("log")
         plt.ylabel(f"log({value_type})")
     else:
-        plt.ylabel(value_type)
+        if value_type == "sentiment":
+            plt.ylabel("sentiment score")
+
     plt.legend(loc="upper left")
 
     file_path = f"public_html/finance/res/img/sentiment/{value_type}"
-    file_name = f"{value_type}_{plot_type}_plot.png"
+    if plot_type == "hourly":
+        file_name = f"b_{value_type}_{plot_type}_plot.png"
+    else:
+        file_name = f"{value_type}_{plot_type}_plot.png"
+
     if not os.path.exists(file_path):
         os.makedirs(file_path)
-    plt.savefig(f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}", dpi=dpi)
-    copyfile(f"{file_path}/{now.strftime(date_hour_file_format)}_{file_name}",
-             f"{file_path}/current_{file_name}")
+    plt.savefig(f"{file_path}/{file_name}", dpi=dpi)
 
     plt.close()
     plt.clf()

@@ -24,6 +24,7 @@ date_file_format = '%Y_%m_%d'
 regex = re.compile('[^a-zA-Z ]')
 style.use("dark_background")
 labels_dict = {}
+script_name = os.path.basename(__file__)
 
 
 def analyse_sentiment(debug=False):
@@ -56,6 +57,8 @@ def analyse_sentiment(debug=False):
         with open(headlines_file_path, "rb") as f:
             headlines = pickle.load(f)
 
+    finance_logger.append_log(f"number of headlines = {len(headlines)}", script_name=script_name)
+
     # REMOVE WORDS THAT AREN'T TICKERS
     with open("data/all_symbols.p", "rb") as f:
         all_symbols = pickle.load(f)
@@ -79,6 +82,10 @@ def analyse_sentiment(debug=False):
             word_list += line_list
             ticker_headlines.append(line)
 
+    ticker_count = len(word_list)
+
+    finance_logger.append_log(f"number of times tickers are mentioned = {ticker_count}", script_name=script_name)
+
     word_freqs = Counter(word_list).most_common()
 
     sentiment_dict = {}
@@ -87,7 +94,7 @@ def analyse_sentiment(debug=False):
         if word_freq[1] > 1:
             sentiment_dict[symbol] = {
                 "symbol": symbol,
-                "frequency": word_freq[1],
+                "frequency": 0,
                 "sentiment": 0,
             }
 
@@ -105,6 +112,7 @@ def analyse_sentiment(debug=False):
         for symbol in symbols_set:
             if symbol in stripped_headlines[i]:
                 sentiment_dict[symbol]["sentiment"] += sentiment_score
+                sentiment_dict[symbol]["frequency"] += 1
 
     if os.path.isfile(df_file_path):
         df = pd.read_csv(df_file_path, parse_dates=True)
@@ -116,8 +124,10 @@ def analyse_sentiment(debug=False):
     df.loc[row_index, "Date"] = now
 
     for entry in sentiment_dict.values():
+        if entry["frequency"] < 1:
+            continue
         symbol = entry["symbol"]
-        df.loc[row_index, f"{symbol}_frequency"] = entry["frequency"]
+        df.loc[row_index, f"{symbol}_frequency"] = entry["frequency"] / ticker_count  # changed to proportional
         df.loc[row_index, f"{symbol}_sentiment"] = entry["sentiment"] / entry["frequency"]
 
     date_col = df["Date"]
@@ -141,7 +151,6 @@ def add_words_to_remove(more_words):
 
 
 def main(debug=False):
-    script_name = os.path.basename(__file__)
     start = time()
     finance_logger.setup_log_script(script_name)
 
@@ -156,4 +165,3 @@ def main(debug=False):
 
 if __name__ == "__main__":
     main(debug=False)
-
