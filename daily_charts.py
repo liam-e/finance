@@ -33,7 +33,7 @@ def generate_daily_charts(debug=False):
     watchlist = data_loader.watchlist()
 
     if debug:
-        watchlist = watchlist[:1]
+        watchlist = watchlist[:2]
 
     for symbol in watchlist:
         ohlc.indicator_chart(symbol, directory="watchlist")
@@ -52,7 +52,7 @@ def generate_daily_charts(debug=False):
             sentiment_tickers = f.read().split("\n")
 
         if debug:
-            sentiment_tickers = sentiment_tickers[:1]
+            sentiment_tickers = sentiment_tickers[:2]
 
         for i, symbol in enumerate(sentiment_tickers):
 

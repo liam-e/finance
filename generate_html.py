@@ -78,10 +78,17 @@ def generate_screener_html(debug=False):
     title = "Stock Screener"
     header_snippet, footer_snippet = header_and_footer(title)
 
+    tablesorter_snippet = "\n\n<link rel='stylesheet' href='../res/css/theme.dark.min.css'>\n" \
+                          "<script src='../res/js/jquery-3.5.1.min.js'></script>\n" \
+                          "<script src='../res/js/jquery.tablesorter.min.js'></script>\n" \
+                          "<script id='js'>$(function() {$('.dataframe').tablesorter({theme:'dark',sortList: [[0,0],[1,0]]});});</script>\n\n"
+
+    header_snippet = header_snippet.replace("</title>", "</title>" + tablesorter_snippet)
+
     watchlist = data_loader.watchlist()
 
     if debug:
-        watchlist = watchlist[:1]
+        watchlist = watchlist[:2]
 
     df = stock_screener.screen_stocks(watchlist, remove_screened=False, reload=True)
 
@@ -107,7 +114,7 @@ def generate_screener_html(debug=False):
         reddit_top_symbols = f.read().split("\n")
 
     if debug:
-        reddit_top_symbols = reddit_top_symbols[:1]
+        reddit_top_symbols = reddit_top_symbols[:2]
 
     df2 = stock_screener.screen_stocks(reddit_top_symbols, remove_screened=False, reload=True)
 

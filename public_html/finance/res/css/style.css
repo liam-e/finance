@@ -47,7 +47,6 @@ th .table-cell {
     margin: 0.5em;
     width: 12em;
     height: 1.5em;
-    overflow: hidden;
 }
 
 .dataframe {
@@ -60,6 +59,16 @@ th, td, tr, thead, tbody {
     border-collapse: collapse;
 }
 
+thead {
+    background: #3dc661;
+}
+
+thead .table-cell {
+    height: 100%;
+    padding: 0.5em 0;
+    color: #000;
+}
+
 tbody tr {
     border-bottom: 1px solid #bbb;
 }
@@ -68,8 +77,8 @@ tbody td {
     border-left: 1px solid #333;
 }
 
-.dataframe tr {
-    height: 5em;
+.dataframe tbody tr {
+    height: 3.5em;
 }
 
 .dataframe td:first-child .table-cell {
@@ -77,13 +86,18 @@ tbody td {
     height: 100%;
 }
 
-.dataframe td:last-child .table-cell {
-    width: 120em;
-    height: 100%;
+.dataframe td:last-child {
     margin: 0;
     padding: 0;
-    overflow: hidden;
+}
+
+.dataframe td:last-child .table-cell {
+    width: 120em;
+    height: 3.5em;
+    padding: 0;
     text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .pass {
