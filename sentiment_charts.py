@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import datetime as dt
+import glob
 import os
 import sys
 import traceback
 from time import time
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -31,22 +31,23 @@ labels_dict = {}
 def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_count=30):
     simple_labels = debug
 
+    root_chart_path = "public_html/finance/res/img/sentiment"
+
+    for root, dirs, files in os.walk("public_html/finance/res/img/sentiment"):
+        for dirname in dirs:
+            for file in glob.glob(f"{root_chart_path}/{dirname}/*"):
+                os.remove(file)
+
     df = load_sentiment_data()
 
     if df is None or len(df) == 0:
         return
-
-    # df.fillna(0, inplace=True)
-
-    # print(df.head())
 
     df.sort_values(df.last_valid_index(), ascending=False, axis=1, inplace=True)
 
     frequency_cols = [col for col in df.columns if col.endswith("frequency")]
     df_freqency = df[frequency_cols]
     df_freqency.columns = [s.split("_")[0] for s in frequency_cols]
-
-    # print(df_freqency)
 
     most_frequent = df_freqency.columns[:stocks_count]
 
@@ -134,7 +135,7 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
     plt.ylabel("sentiment score")
 
     file_path = f"public_html/finance/res/img/sentiment/sentiment"
-    file_name = f"a_sentiment_daily_scatter_plot.png"
+    file_name = f"sentiment_daily_scatter_plot.png"
 
     if not os.path.exists(file_path):
         os.makedirs(file_path)
@@ -176,8 +177,12 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
     plt.figure(figsize=(20, 10), dpi=dpi)
 
     for symbol in df.columns.values:
+        if value_type == "frequency":
+            value = f"{df[symbol][-1]*100:.1f}%"
+        else:
+            value = f"{df[symbol][-1]:.2f}"
         plt.plot(pd.to_datetime(df.index), df[symbol],
-                 label=f"{df[symbol][-1]:.2f} - {stock_label(symbol, simple=simple_labels)}")
+                 label=f"{value} - {stock_label(symbol, simple=simple_labels)}")
 
     plt.title(f"{value_type.title()} - {plot_type} - {now.strftime(date_format)}")
     plt.xlabel("Date")
@@ -192,7 +197,7 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
 
     file_path = f"public_html/finance/res/img/sentiment/{value_type}"
     if plot_type == "hourly":
-        file_name = f"b_{value_type}_{plot_type}_plot.png"
+        file_name = f"{value_type}_{plot_type}_plot.png"
     else:
         file_name = f"{value_type}_{plot_type}_plot.png"
 
@@ -285,4 +290,4 @@ def main(debug=False):
 
 
 if __name__ == "__main__":
-    main(debug=False)
+    main(debug=True)
