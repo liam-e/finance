@@ -43,14 +43,10 @@ th .table-cell {
     text-align: center;
 }
 
-td {
-    height: 2.5em;
-
-}
-
 .table-cell {
     margin: 0.5em;
-    width: 7em;
+    width: 12em;
+    height: 1.5em;
     overflow: hidden;
 }
 
@@ -72,14 +68,22 @@ tbody td {
     border-left: 1px solid #333;
 }
 
+.dataframe tr {
+    height: 5em;
+}
+
 .dataframe td:first-child .table-cell {
     width: 12em;
+    height: 100%;
 }
 
 .dataframe td:last-child .table-cell {
     width: 120em;
-    height: 3em;
+    height: 100%;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
+    text-align: left;
 }
 
 .pass {
