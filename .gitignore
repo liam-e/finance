@@ -132,5 +132,5 @@ dmypy.json
 old/
 data/**/*.csv
 data/**/*.json
-*auth.txt
+data/sentiment/auth.txt
 *.png

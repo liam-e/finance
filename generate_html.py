@@ -23,11 +23,8 @@ def time_updated_tag():
 
 
 def generate_sentiment_html():
-    with open("data/html_snippets/sentiment_header_snippet.html", "r") as f:
-        header_snippet = f.read()
-
-    with open("data/html_snippets/sentiment_footer_snippet.html", "r") as f:
-        footer_snippet = f.read()
+    title = "Reddit stock sentiment"
+    header_snippet, footer_snippet = header_and_footer(title)
 
     root_path = "public_html/finance/res/img/sentiment"
 
@@ -52,11 +49,8 @@ def generate_sentiment_html():
 
 
 def generate_ohlc_html():
-    with open("data/html_snippets/ohlc_header_snippet.html", "r") as f:
-        header_snippet = f.read()
-
-    with open("data/html_snippets/ohlc_footer_snippet.html", "r") as f:
-        footer_snippet = f.read()
+    title = "Daily charts"
+    header_snippet, footer_snippet = header_and_footer(title)
 
     root_path = "public_html/finance/res/img/ohlc"
 
@@ -66,7 +60,7 @@ def generate_ohlc_html():
 
     for subdir in ["watchlist", "reddit_sentiment"]:
         subheading = " ".join(subdir.title().split("_"))
-        html_content += f"\n<h3>{subheading}</h3>\n"
+        html_content += f"\n<h2>{subheading}</h2>\n"
         for root, subdirs, files in os.walk(f"{root_path}/{subdir}"):
             for file in files:
                 img_path = f"{html_root_path}/{subdir}/{file}"
@@ -81,18 +75,15 @@ def generate_ohlc_html():
 
 
 def generate_screener_html(debug=False):
+    title = "Stock Screener"
+    header_snippet, footer_snippet = header_and_footer(title)
+
     watchlist = data_loader.watchlist()
 
     if debug:
         watchlist = watchlist[:1]
 
     df = stock_screener.screen_stocks(watchlist, remove_screened=False, reload=True)
-
-    with open("data/html_snippets/screener_header_snippet.html", "r") as f:
-        header_snippet = f.read()
-
-    with open("data/html_snippets/screener_footer_snippet.html", "r") as f:
-        footer_snippet = f.read()
 
     table = df.to_html(index=False, na_rep="")
 
@@ -141,6 +132,18 @@ def generate_screener_html(debug=False):
 
     with open("public_html/finance/screener/index.html", "w") as f:
         f.write(html)
+
+
+def header_and_footer(title):
+    with open("data/html_snippets/header_snippet.html", "r") as f:
+        header_snippet = f.read()
+
+    header_snippet = header_snippet.replace("<title></title>", f"<title>{title}</title>")
+
+    with open("data/html_snippets/footer_snippet.html", "r") as f:
+        footer_snippet = f.read()
+
+    return header_snippet, footer_snippet
 
 
 def generate_all_html(debug=False):
