@@ -184,6 +184,8 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
         plt.plot(pd.to_datetime(df.index), df[symbol],
                  label=f"{value} - {stock_label(symbol, simple=simple_labels)}")
 
+        plt.annotate(f"  {symbol}", (pd.to_datetime(df.index)[-1], df[symbol][-1]), fontsize=12)
+
     plt.title(f"{value_type.title()} - {plot_type} - {now.strftime(date_format)}")
     plt.xlabel("Date")
     if log:
