@@ -145,8 +145,6 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
         else:
             label_positions.append([row["log_frequency"], row["sentiment"]])
 
-    # print(len(label_positions), print(len(df)))
-
     for i, row in df.iterrows():
         plt.annotate(
             row["symbol"],
@@ -156,8 +154,6 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
         )
 
     plt.title(f"Scatter plot - daily")
-    # plt.xscale("log")
-    # plt.yscale("log")
     plt.xlabel("Relative frequency (logarithmic)")
     plt.ylabel("sentiment score")
 
@@ -233,10 +229,7 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, simple_l
     plt.xlabel("Date")
     if value_type == "frequency":
         plt.ylabel(f"Relative frequency (logarithmic)")
-        ys = np.arange(np.floor(np.nanmin(df.values) * 100) / 100.0 + 0.005, np.ceil(np.nanmax(df.values) * 100) / 100.0 + 0.005, 0.005)
-
-        print(df.tail())
-        print(ys)
+        ys = np.arange(np.floor(np.nanmin(df.values) * 100) / 100.0 + 0.01, np.ceil(np.nanmax(df.values) * 100) / 100.0 + 0.01, 0.01)
         plt.yticks(np.log(ys), [f"{y * 100:.1f}%" for y in ys])
     else:
         if value_type == "sentiment":
