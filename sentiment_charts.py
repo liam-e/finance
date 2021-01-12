@@ -224,7 +224,7 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, simple_l
             y = np.log(df[symbol].values)
         else:
             y = df[symbol]
-        plt.plot(pd.to_datetime(df.index), df[symbol],
+        plt.plot(pd.to_datetime(df.index), y,
                  label=f"{value} - {stock_label(symbol, simple=simple_labels)}")
 
         plt.annotate(f"  {symbol}", (pd.to_datetime(df.index)[-1], df[symbol][-1]), fontsize=12)
