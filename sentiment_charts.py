@@ -159,7 +159,7 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
     plt.title(f"Scatter plot - daily")
     # plt.xscale("log")
     # plt.yscale("log")
-    plt.xlabel("Frequency (logarithmic)")
+    plt.xlabel("Relative frequency (logarithmic)")
     plt.ylabel("sentiment score")
 
     xs = np.arange(0.005, ceil(df["frequency"].max() * 100) / 100.0 + 0.005, 0.005)
@@ -221,6 +221,10 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, simple_l
             value = f"{df[symbol][-1]*100:.1f}%"
         else:
             value = f"{df[symbol][-1]:.2f}"
+        if value_type == "frequency":
+            y = np.log(df[symbol].values)
+        else:
+            y = df[symbol]
         plt.plot(pd.to_datetime(df.index), df[symbol],
                  label=f"{value} - {stock_label(symbol, simple=simple_labels)}")
 
@@ -229,9 +233,11 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, simple_l
     plt.title(f"{value_type.title()} - {plot_type}")
     plt.xlabel("Date")
     if value_type == "frequency":
-        plt.yscale("log")
-        plt.ylabel(f"Frequency (logarithmic)")
+        plt.ylabel(f"Relative frequency (logarithmic)")
         ys = np.arange(0.005, ceil(np.nanmax(df.values) * 100) / 100.0 + 0.005, 0.005)
+
+        print(df.tail())
+        print(ys)
         plt.yticks(np.log(ys), [f"{y * 100:.1f}%" for y in ys])
     else:
         if value_type == "sentiment":
