@@ -227,13 +227,13 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, simple_l
 
         too_close = False
         for i in range(len(label_positions)):
-            if abs(df[symbol][-1] - label_positions[i]) < 0.1:
+            if abs(y[-1] - label_positions[i]) < 0.1:
                 too_close = True
                 label_positions[i] += 0.03
         if too_close:
-            label_positions.append(df[symbol][-1] - 0.03)
+            label_positions.append(y[-1] - 0.03)
         else:
-            label_positions.append(df[symbol][-1])
+            label_positions.append(y[-1])
 
     for i, symbol in enumerate(df.columns.values):
         plt.annotate(f"  {symbol}", (pd.to_datetime(df.index)[-1], label_positions[i]), fontsize=12)
