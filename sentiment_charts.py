@@ -9,7 +9,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib import style
-from wordcloud import WordCloud
+# from wordcloud import WordCloud
+import matplotlib.lines as mlines
+from math import ceil
 
 import data_loader
 import finance_logger
@@ -55,19 +57,23 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
     df_daily.sort_values(df_daily.last_valid_index(), ascending=False, axis=1, inplace=True)
     most_frequent_daily = df_daily.columns[:stocks_count].values
 
-    df_hourly = df_freqency.resample("H").mean()
-    df_hourly.sort_values(df_hourly.last_valid_index(), ascending=False, axis=1, inplace=True)
-    most_frequent_hourly = df_hourly.columns[:stocks_count].values
+    df_weekly = df_freqency.resample("W").mean()
+    df_weekly.sort_values(df_weekly.last_valid_index(), ascending=False, axis=1, inplace=True)
+    most_frequent_weekly = df_weekly.columns[:stocks_count].values
 
-    log_values = True
+    # df_hourly = df_freqency.resample("H").mean()
+    # df_hourly.sort_values(df_hourly.last_valid_index(), ascending=False, axis=1, inplace=True)
+    # most_frequent_hourly = df_hourly.columns[:stocks_count].values
 
     # ----------- FREQUENCY -----------
-    plot_sentiment(df_freqency, value_type="frequency", plot_type="daily", log=log_values, dpi=dpi,
+    plot_sentiment(df_freqency, value_type="frequency", plot_type="daily", dpi=dpi,
                    simple_labels=simple_labels)
-    plot_sentiment(df_freqency, value_type="frequency", plot_type="hourly", log=log_values, dpi=dpi,
+    plot_sentiment(df_freqency, value_type="frequency", plot_type="weekly", dpi=dpi,
                    simple_labels=simple_labels)
-    plot_sentiment(df_freqency, value_type="frequency", plot_type="timeseries", log=log_values, dpi=dpi,
-                   simple_labels=simple_labels)
+    # plot_sentiment(df_freqency, value_type="frequency", plot_type="hourly", dpi=dpi,
+    #                simple_labels=simple_labels)
+    # plot_sentiment(df_freqency, value_type="frequency", plot_type="timeseries", dpi=dpi,
+    #                simple_labels=simple_labels)
 
     # ----------- SENTIMENT -----------
     sentiment_cols = [col for col in df.columns if
@@ -78,17 +84,24 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
     plot_sentiment(df_sentiment, value_type="sentiment", plot_type="daily", dpi=dpi, simple_labels=simple_labels)
 
     sentiment_cols = [col for col in df.columns if
-                      col.endswith("sentiment") and col.split("_")[0] in most_frequent_hourly]
+                      col.endswith("sentiment") and col.split("_")[0] in most_frequent_weekly]
     df_sentiment = df[sentiment_cols]
     df_sentiment.columns = [s.split("_")[0] for s in sentiment_cols]
 
-    plot_sentiment(df_sentiment, value_type="sentiment", plot_type="hourly", dpi=dpi, simple_labels=simple_labels)
+    plot_sentiment(df_sentiment, value_type="sentiment", plot_type="weekly", dpi=dpi, simple_labels=simple_labels)
 
-    sentiment_cols = [col for col in df.columns if col.endswith("sentiment") and col.split("_")[0] in most_frequent]
-    df_sentiment = df[sentiment_cols]
-    df_sentiment.columns = [s.split("_")[0] for s in sentiment_cols]
-
-    plot_sentiment(df_sentiment, value_type="sentiment", plot_type="timeseries", dpi=dpi, simple_labels=simple_labels)
+    # sentiment_cols = [col for col in df.columns if
+    #                   col.endswith("sentiment") and col.split("_")[0] in most_frequent_hourly]
+    # df_sentiment = df[sentiment_cols]
+    # df_sentiment.columns = [s.split("_")[0] for s in sentiment_cols]
+    #
+    # plot_sentiment(df_sentiment, value_type="sentiment", plot_type="hourly", dpi=dpi, simple_labels=simple_labels)
+    #
+    # sentiment_cols = [col for col in df.columns if col.endswith("sentiment") and col.split("_")[0] in most_frequent]
+    # df_sentiment = df[sentiment_cols]
+    # df_sentiment.columns = [s.split("_")[0] for s in sentiment_cols]
+    #
+    # plot_sentiment(df_sentiment, value_type="sentiment", plot_type="timeseries", dpi=dpi, simple_labels=simple_labels)
 
     # ----------- SCATTERPLOT -----------
     most_frequent_daily = df_daily.columns[:scatter_stocks_count].values
@@ -120,19 +133,43 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
     plt.scatter(df_neutral["log_frequency"], df_neutral["sentiment"], marker="o", color="gold")
     plt.scatter(df_negative["log_frequency"], df_negative["sentiment"], marker="o", color="red")
 
+    label_positions = []
+
+    for i, row in df.iterrows():
+        too_close = False
+        for j in range(len(label_positions)):
+            if abs(row["log_frequency"] - label_positions[j][0]) < 0.1 and abs(row["sentiment"] - label_positions[j][1]) < 0.02:
+                too_close = True
+                label_positions[j][1] += 0.03
+        if too_close:
+            label_positions.append([row["log_frequency"], row["sentiment"] - 0.03])
+        else:
+            label_positions.append([row["log_frequency"], row["sentiment"]])
+
+    # print(len(label_positions), print(len(df)))
+
     for i, row in df.iterrows():
         plt.annotate(
-            stock_label(row["symbol"], simple=simple_labels),
-            (row["log_frequency"], row["sentiment"]),
+            row["symbol"],
+            (label_positions[i][0], label_positions[i][1]),
             fontsize=12,
             color="white"
         )
 
-    plt.title(f"Scatter plot - daily - {now.strftime(date_format)}")
+    plt.title(f"Scatter plot - daily")
     # plt.xscale("log")
     # plt.yscale("log")
-    plt.xlabel("log(frequency)")
+    plt.xlabel("Frequency (logarithmic)")
     plt.ylabel("sentiment score")
+
+    xs = np.arange(0.005, ceil(df["frequency"].max() * 100) / 100.0 + 0.005, 0.005)
+    plt.xticks(np.log(xs), [f"{x*100:.1f}%" for x in xs])
+
+    positive_marker = mlines.Line2D([], [], color='green', marker='o', linestyle='None', label='Positive')
+    neutral_marker = mlines.Line2D([], [], color='gold', marker='o', linestyle='None', label='Neutral')
+    negative_marker = mlines.Line2D([], [], color='red', marker='o', linestyle='None', label='Negative')
+
+    plt.legend(handles=[positive_marker, neutral_marker, negative_marker], loc="upper right")
 
     file_path = f"public_html/finance/res/img/sentiment/sentiment"
     file_name = f"sentiment_daily_scatter_plot.png"
@@ -147,7 +184,7 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
     generate_html.generate_sentiment_html()
 
 
-def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=False, simple_labels=False):
+def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, simple_labels=False):
     if df is None or len(df) == 0:
         return
 
@@ -155,12 +192,15 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
         df = df.resample("D").mean()
         df = df[df.index >= df.index[-1] - dt.timedelta(days=30)]
 
-    elif plot_type == "hourly":
-        df = df.resample("H").mean()
-        df = df[df.index >= df.index[-1] - dt.timedelta(days=7)]
-    elif plot_type == "timeseries":
-        df = df
-        df = df[df.index >= df.index[-1] - dt.timedelta(days=7)]
+    elif plot_type == "weekly":
+        df = df.resample("D").mean()
+        df = df[df.index >= df.index[-1] - dt.timedelta(days=30*7)]
+    # elif plot_type == "hourly":
+    #     df = df.resample("H").mean()
+    #     df = df[df.index >= df.index[-1] - dt.timedelta(days=7)]
+    # elif plot_type == "timeseries":
+    #     df = df
+    #     df = df[df.index >= df.index[-1] - dt.timedelta(days=7)]
     else:
         return
 
@@ -186,22 +226,21 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, log=Fals
 
         plt.annotate(f"  {symbol}", (pd.to_datetime(df.index)[-1], df[symbol][-1]), fontsize=12)
 
-    plt.title(f"{value_type.title()} - {plot_type} - {now.strftime(date_format)}")
+    plt.title(f"{value_type.title()} - {plot_type}")
     plt.xlabel("Date")
-    if log:
+    if value_type == "frequency":
         plt.yscale("log")
-        plt.ylabel(f"log({value_type})")
+        plt.ylabel(f"Frequency (logarithmic)")
+        ys = np.arange(0.005, ceil(np.nanmax(df.values) * 100) / 100.0 + 0.005, 0.005)
+        plt.yticks(np.log(ys), [f"{y * 100:.1f}%" for y in ys])
     else:
         if value_type == "sentiment":
-            plt.ylabel("sentiment score")
+            plt.ylabel("Sentiment score")
 
     plt.legend(loc="upper left")
 
     file_path = f"public_html/finance/res/img/sentiment/{value_type}"
-    if plot_type == "hourly":
-        file_name = f"{value_type}_{plot_type}_plot.png"
-    else:
-        file_name = f"{value_type}_{plot_type}_plot.png"
+    file_name = f"{value_type}_{plot_type}_plot.png"
 
     if not os.path.exists(file_path):
         os.makedirs(file_path)
@@ -218,24 +257,24 @@ def stock_label(symbol, simple=False):
     if symbol in labels_dict:
         return labels_dict[symbol]
     else:
-        df = data_loader.load_price_history(symbol, dt.date.today() - dt.timedelta(days=5), dt.date.today(),
-                                            reload=True)
-        if df is not None and len(df) >= 2:
-            old_close = df.iloc[-2]["Adj Close"]
-            new_close = df.iloc[-1]["Adj Close"]
-
-            current_price_str = f" {new_close:.2f}"
-
-            percent_change = (new_close - old_close) / old_close * 100
-
-            if percent_change > 0:
-                percent_change_str = f" +{percent_change:.2f}%"
-            else:
-                percent_change_str = f" {percent_change:.2f}%"
-
-        else:
-            current_price_str = ""
-            percent_change_str = ""
+        # df = data_loader.load_price_history(symbol, dt.date.today() - dt.timedelta(days=5), dt.date.today(),
+        #                                     reload=True)
+        # if df is not None and len(df) >= 2:
+        #     old_close = df.iloc[-2]["Adj Close"]
+        #     new_close = df.iloc[-1]["Adj Close"]
+        #
+        #     current_price_str = f" {new_close:.2f}"
+        #
+        #     percent_change = (new_close - old_close) / old_close * 100
+        #
+        #     if percent_change > 0:
+        #         percent_change_str = f" +{percent_change:.2f}%"
+        #     else:
+        #         percent_change_str = f" {percent_change:.2f}%"
+        #
+        # else:
+        #     current_price_str = ""
+        #     percent_change_str = ""
 
         info = data_loader.load_ticker_info(symbol, reload=False)
         if info is not None and "shortName" in info:
@@ -243,19 +282,20 @@ def stock_label(symbol, simple=False):
         else:
             company_name_str = ""
 
-        label = f" {company_name_str}({symbol.upper()}){current_price_str}{percent_change_str}"
+        # label = f" {company_name_str}({symbol.upper()}){current_price_str}{percent_change_str}"
+        label = f" {company_name_str}({symbol.upper()})"
 
         labels_dict[symbol] = label
         return label
 
 
-def generate_word_cloud(symbols_dict, dpi=150):
-    word_cloud = WordCloud(scale=5, max_words=200, relative_scaling=0.5,
-                           normalize_plurals=False).generate_from_frequencies(symbols_dict)
-    save_image(word_cloud,
-               f"public_html/finance/res/img/sentiment/word_clouds/"
-               f"{now.strftime(datetime_file_format)}_word_cloud.png",
-               dpi=dpi)
+# def generate_word_cloud(symbols_dict, dpi=150):
+#     word_cloud = WordCloud(scale=5, max_words=200, relative_scaling=0.5,
+#                            normalize_plurals=False).generate_from_frequencies(symbols_dict)
+#     save_image(word_cloud,
+#                f"public_html/finance/res/img/sentiment/word_clouds/"
+#                f"{now.strftime(datetime_file_format)}_word_cloud.png",
+#                dpi=dpi)
 
 
 def save_image(data, filename, dpi=150):
