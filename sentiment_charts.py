@@ -11,7 +11,6 @@ import pandas as pd
 from matplotlib import style
 # from wordcloud import WordCloud
 import matplotlib.lines as mlines
-from math import ceil
 
 import data_loader
 import finance_logger
@@ -162,7 +161,7 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
     plt.xlabel("Relative frequency (logarithmic)")
     plt.ylabel("sentiment score")
 
-    xs = np.arange(0.005, ceil(df["frequency"].max() * 100) / 100.0 + 0.005, 0.005)
+    xs = np.arange(0.005, np.ceil(df["frequency"].max() * 100) / 100.0 + 0.005, 0.005)
     plt.xticks(np.log(xs), [f"{x*100:.1f}%" for x in xs])
 
     positive_marker = mlines.Line2D([], [], color='green', marker='o', linestyle='None', label='Positive')
@@ -234,7 +233,7 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, simple_l
     plt.xlabel("Date")
     if value_type == "frequency":
         plt.ylabel(f"Relative frequency (logarithmic)")
-        ys = np.arange(0.005, ceil(np.nanmax(df.values) * 100) / 100.0 + 0.005, 0.005)
+        ys = np.arange(np.floor(np.nanmin(df.values) * 100) / 100.0 + 0.005, np.ceil(np.nanmax(df.values) * 100) / 100.0 + 0.005, 0.005)
 
         print(df.tail())
         print(ys)
