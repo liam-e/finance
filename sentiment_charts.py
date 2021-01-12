@@ -211,6 +211,8 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, simple_l
 
     plt.figure(figsize=(20, 10), dpi=dpi)
 
+    label_positions = []
+
     for symbol in df.columns.values:
         if value_type == "frequency":
             value = f"{df[symbol][-1]*100:.1f}%"
@@ -223,7 +225,18 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, simple_l
         plt.plot(pd.to_datetime(df.index), y,
                  label=f"{value} - {stock_label(symbol, simple=simple_labels)}")
 
-        plt.annotate(f"  {symbol}", (pd.to_datetime(df.index)[-1], df[symbol][-1]), fontsize=12)
+        too_close = False
+        for i in range(len(label_positions)):
+            if abs(df[symbol][-1] - label_positions[i]) < 0.1:
+                too_close = True
+                label_positions[i] += 0.03
+        if too_close:
+            label_positions.append(df[symbol][-1] - 0.03)
+        else:
+            label_positions.append(df[symbol][-1])
+
+    for i, symbol in enumerate(df.columns.values):
+        plt.annotate(f"  {symbol}", (pd.to_datetime(df.index)[-1], label_positions[i]), fontsize=12)
 
     plt.title(f"{value_type.title()} - {plot_type}")
     plt.xlabel("Date")
