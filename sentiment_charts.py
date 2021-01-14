@@ -188,7 +188,7 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=10, simple_l
         df = df[df.index >= df.index[-1] - dt.timedelta(days=30)]
 
     elif plot_type == "weekly":
-        df = df.resample("D").mean()
+        df = df.resample("W").mean()
         df = df[df.index >= df.index[-1] - dt.timedelta(days=30*7)]
     # elif plot_type == "hourly":
     #     df = df.resample("H").mean()
