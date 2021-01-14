@@ -157,7 +157,7 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=10, scatter_stocks_
     plt.xlabel("Relative frequency (logarithmic)")
     plt.ylabel("sentiment score")
 
-    xs = np.arange(0.005, np.ceil(df["frequency"].max() * 100) / 100.0 + 0.005, 0.005)
+    xs = np.arange(0.01, np.ceil(df["frequency"].max() * 10) / 10.0 + 0.01, 0.01)
     plt.xticks(np.log(xs), [f"{x*100:.1f}%" for x in xs])
 
     positive_marker = mlines.Line2D([], [], color='green', marker='o', linestyle='None', label='Positive')
