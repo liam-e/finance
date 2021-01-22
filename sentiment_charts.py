@@ -215,7 +215,6 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=5, simple_la
 
     for symbol in df.columns.values:
         df_symbol = df[symbol].loc[df[symbol].notna()]
-        print(df_symbol.head())
         if value_type == "frequency":
             value = f"{df_symbol[-1]*100:.1f}%"
         else:
