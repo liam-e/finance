@@ -214,15 +214,17 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=5, simple_la
     label_positions = []
 
     for symbol in df.columns.values:
+        df_symbol = df[symbol].loc[df[symbol].notna()]
+        print(df_symbol.head())
         if value_type == "frequency":
-            value = f"{df[symbol][-1]*100:.1f}%"
+            value = f"{df_symbol[-1]*100:.1f}%"
         else:
-            value = f"{df[symbol][-1]:.2f}"
+            value = f"{df_symbol[-1]:.2f}"
         if value_type == "frequency":
-            y = np.log(df[symbol].values)
+            y = np.log(df_symbol.values)
         else:
-            y = df[symbol]
-        plt.plot(pd.to_datetime(df.index), y,
+            y = df_symbol.values
+        plt.plot(df_symbol.index, y,
                  label=f"{value} - {stock_label(symbol, simple=simple_labels)}")
 
         if value_type == "frequency":
