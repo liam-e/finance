@@ -163,10 +163,6 @@ def add_words_to_blacklist():
                 words_blacklist.add(word.upper())
 
             for w in words_blacklist:
-                if w == "rh":
-                    print(w)
-
-            for w in words_blacklist:
                 new_set.add(w.upper())
     
             with open("data/sentiment/words_blacklist.p", "wb") as f:
