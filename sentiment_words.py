@@ -63,10 +63,8 @@ def analyse_sentiment(debug=False):
     with open("data/all_symbols.p", "rb") as f:
         all_symbols = pickle.load(f)
 
-    # add_words_to_remove([])
-
-    with open("data/sentiment/words_to_remove.p", "rb") as f:
-        words_to_remove = pickle.load(f)
+    with open("data/sentiment/words_blacklist.p", "rb") as f:
+        words_blacklist = pickle.load(f)
 
     word_list = []
 
@@ -75,7 +73,7 @@ def analyse_sentiment(debug=False):
 
     for line in headlines:
         line_list = [s for s in [s.strip() for s in regex.sub('', line).split(" ")] if
-                     s.isupper() and s in all_symbols and s not in words_to_remove]
+                     s.isupper() and s in all_symbols and s not in words_blacklist]
         if line_list:
             line_set = set(line_list)
             stripped_headlines.append(line_set)
@@ -123,6 +121,13 @@ def analyse_sentiment(debug=False):
 
     df.loc[row_index, "Date"] = now
 
+    labels_to_drop = []
+    for column in df.columns.values:
+        if column.split("_")[0] in words_blacklist:
+            labels_to_drop.append(column)
+
+    df.drop(labels=labels_to_drop, axis=1, inplace=True)
+
     for entry in sentiment_dict.values():
         if entry["frequency"] < 1:
             continue
@@ -139,15 +144,33 @@ def analyse_sentiment(debug=False):
         df.to_csv(f"data/sentiment/reddit_sentiment.csv", index=False)
 
 
-def add_words_to_remove(more_words):
-    with open("data/sentiment/words_to_remove.p", "rb") as f:
-        words_to_remove = pickle.load(f)
+def add_words_to_blacklist():
+    
+    new_blacklist_words_path = "data/sentiment/new_blacklist_words.txt"
+    if os.path.exists(new_blacklist_words_path):
 
-    for word in more_words:
-        words_to_remove.add(word.lower())
+        with open(new_blacklist_words_path, "r") as f:
+            new_blacklist_words = f.readlines()
+            
+        if len(new_blacklist_words) > 0:
 
-    with open("data/sentiment/words_to_remove.p", "wb") as f:
-        pickle.dump(words_to_remove, f)
+            new_set = set()
+
+            with open("data/sentiment/words_blacklist.p", "rb") as f:
+                words_blacklist = pickle.load(f)
+    
+            for word in new_blacklist_words:
+                words_blacklist.add(word.upper())
+
+            for w in words_blacklist:
+                if w == "rh":
+                    print(w)
+
+            for w in words_blacklist:
+                new_set.add(w.upper())
+    
+            with open("data/sentiment/words_blacklist.p", "wb") as f:
+                pickle.dump(new_set, f)
 
 
 def main(debug=False):
@@ -155,6 +178,7 @@ def main(debug=False):
     finance_logger.setup_log_script(script_name)
 
     try:
+        add_words_to_blacklist()
         analyse_sentiment(debug=debug)
         finance_logger.append_log("success", script_name=script_name)
         finance_logger.log_time_taken(time() - start, script_name)
@@ -164,4 +188,5 @@ def main(debug=False):
 
 
 if __name__ == "__main__":
+    add_words_to_blacklist()
     main(debug=False)
