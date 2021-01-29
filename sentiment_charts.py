@@ -2,6 +2,7 @@
 import datetime as dt
 import glob
 import os
+import pickle
 import sys
 import traceback
 from time import time
@@ -16,6 +17,7 @@ import data_loader
 import finance_logger
 import generate_html
 
+script_name = os.path.basename(__file__)
 os.chdir(sys.path[0])
 now = dt.datetime.now()
 date_format = "%d/%m/%Y %H:%M:%S"
@@ -43,6 +45,18 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=5, scatter_stocks_c
 
     if df is None or len(df) == 0:
         return
+
+    # DEBUGGING
+
+    with open("data/sentiment/words_blacklist.p", "rb") as f:
+        words_blacklist = pickle.load(f)
+
+    for column in df.columns:
+        ticker = column.split("_")[0]
+        if column.split("_")[0] in words_blacklist:
+            finance_logger.append_log(f"error - blacklisted word {ticker} in dataframe", script_name=script_name)
+            print(f"error - blacklisted word {ticker} in dataframe")
+            raise Exception
 
     df.sort_values(df.last_valid_index(), ascending=False, axis=1, inplace=True)
 
@@ -153,7 +167,7 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=5, scatter_stocks_c
             color="white"
         )
 
-    plt.title(f"Scatter plot - daily")
+    plt.title(f"Scatter plot - daily - updated at {now.strftime(date_format)}")
     plt.xlabel("Relative frequency (logarithmic)")
     plt.ylabel("sentiment score")
 
@@ -243,7 +257,7 @@ def plot_sentiment(df, value_type, plot_type, dpi=150, stocks_count=5, simple_la
         plt.annotate(f"  {symbol}", (pd.to_datetime(df.index)[-1], label_positions[i]), fontsize=12)
         # plt.annotate(f"  {symbol}", (pd.to_datetime(df.index)[-1], y[-1]), fontsize=12)
 
-    plt.title(f"{value_type.title()} - {plot_type}")
+    plt.title(f"{value_type.title()} - {plot_type} - updated at {now.strftime(date_format)}")
     plt.xlabel("Date")
     if value_type == "frequency":
         plt.ylabel(f"Relative frequency (logarithmic)")
@@ -334,7 +348,6 @@ def load_sentiment_data():
 
 
 def main(debug=False):
-    script_name = os.path.basename(__file__)
     start = time()
     finance_logger.setup_log_script(script_name)
 
