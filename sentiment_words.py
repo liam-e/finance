@@ -67,16 +67,6 @@ def analyse_sentiment(debug=False):
     with open(words_blacklist_path, "r") as f:
         words_blacklist = set(f.read().split("\n"))
 
-    if "RH" not in words_blacklist:
-        print("error! RH not in blacklist")
-
-    if "rh" in words_blacklist:
-        print("error! rh in blacklist")
-
-    assert "RH" in words_blacklist
-    assert "rh" not in words_blacklist
-
-
     word_list = []
 
     ticker_headlines = []
@@ -86,6 +76,8 @@ def analyse_sentiment(debug=False):
         line_list = [s for s in [s.strip() for s in regex.sub('', line).split(" ")] if
                      s.isupper() and s in all_symbols and s not in words_blacklist]
         if line_list:
+            if "TDA" in line_list:
+                print(line)
             line_set = set(line_list)
             stripped_headlines.append(line_set)
             word_list += line_list
@@ -137,8 +129,6 @@ def analyse_sentiment(debug=False):
         if column.split("_")[0] in words_blacklist:
             labels_to_drop.append(column)
 
-    print(labels_to_drop)
-
     df.drop(labels=labels_to_drop, axis=1, inplace=True)
 
     for entry in sentiment_dict.values():
@@ -157,33 +147,11 @@ def analyse_sentiment(debug=False):
         df.to_csv(f"data/sentiment/reddit_sentiment.csv", index=False)
 
 
-def add_words_to_blacklist():
-    
-    new_blacklist_words_path = "data/sentiment/new_blacklist_words.txt"
-    if os.path.exists(new_blacklist_words_path):
-
-        with open(new_blacklist_words_path, "r") as f:
-            new_blacklist_words = f.readlines()
-            
-        if len(new_blacklist_words) > 0:
-
-            with open(words_blacklist_path, "r") as f:
-                words_blacklist = set(f.read().split("\n"))
-
-            for word in new_blacklist_words:
-                words_blacklist.add(word.upper())
-
-            with open(words_blacklist_path, "w") as f:
-                for word in words_blacklist:
-                    f.write(word + "\n")
-
-
 def main(debug=False):
     start = time()
     finance_logger.setup_log_script(script_name)
 
     try:
-        add_words_to_blacklist()
         analyse_sentiment(debug=debug)
         finance_logger.append_log("success", script_name=script_name)
         finance_logger.log_time_taken(time() - start, script_name)
