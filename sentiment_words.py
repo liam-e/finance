@@ -25,6 +25,7 @@ regex = re.compile('[^a-zA-Z ]')
 style.use("dark_background")
 labels_dict = {}
 script_name = os.path.basename(__file__)
+words_blacklist_path = "data/sentiment/words_blacklist.txt"
 
 
 def analyse_sentiment(debug=False):
@@ -63,8 +64,18 @@ def analyse_sentiment(debug=False):
     with open("data/all_symbols.p", "rb") as f:
         all_symbols = pickle.load(f)
 
-    with open("data/sentiment/words_blacklist.p", "rb") as f:
-        words_blacklist = pickle.load(f)
+    with open(words_blacklist_path, "r") as f:
+        words_blacklist = set(f.read().split("\n"))
+
+    if "RH" not in words_blacklist:
+        print("error! RH not in blacklist")
+
+    if "rh" in words_blacklist:
+        print("error! rh in blacklist")
+
+    assert "RH" in words_blacklist
+    assert "rh" not in words_blacklist
+
 
     word_list = []
 
@@ -126,6 +137,8 @@ def analyse_sentiment(debug=False):
         if column.split("_")[0] in words_blacklist:
             labels_to_drop.append(column)
 
+    print(labels_to_drop)
+
     df.drop(labels=labels_to_drop, axis=1, inplace=True)
 
     for entry in sentiment_dict.values():
@@ -154,19 +167,15 @@ def add_words_to_blacklist():
             
         if len(new_blacklist_words) > 0:
 
-            new_set = set()
+            with open(words_blacklist_path, "r") as f:
+                words_blacklist = set(f.read().split("\n"))
 
-            with open("data/sentiment/words_blacklist.p", "rb") as f:
-                words_blacklist = pickle.load(f)
-    
             for word in new_blacklist_words:
                 words_blacklist.add(word.upper())
 
-            for w in words_blacklist:
-                new_set.add(w.upper())
-    
-            with open("data/sentiment/words_blacklist.p", "wb") as f:
-                pickle.dump(new_set, f)
+            with open(words_blacklist_path, "w") as f:
+                for word in words_blacklist:
+                    f.write(word + "\n")
 
 
 def main(debug=False):
@@ -184,5 +193,4 @@ def main(debug=False):
 
 
 if __name__ == "__main__":
-    add_words_to_blacklist()
     main(debug=False)

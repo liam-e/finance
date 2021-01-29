@@ -48,16 +48,6 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=5, scatter_stocks_c
 
     # DEBUGGING
 
-    with open("data/sentiment/words_blacklist.p", "rb") as f:
-        words_blacklist = pickle.load(f)
-
-    for column in df.columns:
-        ticker = column.split("_")[0]
-        if column.split("_")[0] in words_blacklist:
-            finance_logger.append_log(f"error - blacklisted word {ticker} in dataframe", script_name=script_name)
-            print(f"error - blacklisted word {ticker} in dataframe")
-            raise Exception
-
     df.sort_values(df.last_valid_index(), ascending=False, axis=1, inplace=True)
 
     frequency_cols = [col for col in df.columns if col.endswith("frequency")]
