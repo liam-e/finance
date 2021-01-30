@@ -3,7 +3,7 @@ import os
 import sys
 import traceback
 from time import time
-
+from bs4 import BeautifulSoup as bs
 import markdown
 
 import data_loader
@@ -23,26 +23,37 @@ def time_updated_tag():
 
 
 def generate_sentiment_html():
-    title = "Reddit stock sentiment"
-    header_snippet, footer_snippet = header_and_footer(title)
 
-    root_path = "public_html/finance/res/img/sentiment"
+    with open("public_html/finance/sentiment/index.html", "r") as f:
+        html = f.read()
 
-    html_root_path = "../res/img/sentiment"
+    soup = bs(html, "lxml")
 
-    html_content = f"\n<header>\n<h1>Reddit stock sentiment</h1>\n{time_updated_tag()}\n</header>\n"
+    div = soup.find("p", {"id": "timestamp"})
+    div.string.replace_with(f"Last updated: {dt.datetime.now().strftime('%A, %d %B, %Y at %I:%M:%S %p')}")
 
-    for subdir in ["sentiment", "frequency"]:
-        subheading = " ".join(subdir.title().split("_"))
-        html_content += f"\n<h2>{subheading}</h2>\n"
-        for root, subdirs, files in os.walk(f"{root_path}/{subdir}"):
-            for file in files:
-                img_path = f"{html_root_path}/{subdir}/{file}"
-                img_name = f"{subdir.title()} {img_path.split('_')[-2]} plot"
-                img_tag = f"<div class='imgbox'><img class='center-fit' src='{img_path}' alt='{img_name}'/></div>\n"
-                html_content += img_tag
+    html = str(soup)
 
-    html = header_snippet + html_content + footer_snippet
+    # title = "Reddit stock sentiment"
+    # header_snippet, footer_snippet = header_and_footer(title)
+    #
+    # root_path = "public_html/finance/res/img/sentiment"
+    #
+    # html_root_path = "../res/img/sentiment"
+    #
+    # html_content = f"\n<header>\n<h1>Wallstreetbets tracker</h1>\n{time_updated_tag()}\n</header>\n"
+    #
+    # for subdir in ["sentiment", "frequency"]:
+    #     subheading = " ".join(subdir.title().split("_"))
+    #     html_content += f"\n<h2>{subheading}</h2>\n"
+    #     for root, subdirs, files in os.walk(f"{root_path}/{subdir}"):
+    #         for file in files:
+    #             img_path = f"{html_root_path}/{subdir}/{file}"
+    #             img_name = f"{subdir.title()} {img_path.split('_')[-2]} plot"
+    #             img_tag = f"<div class='imgbox'><img class='center-fit' src='{img_path}' alt='{img_name}'/></div>\n"
+    #             html_content += img_tag
+    #
+    # html = header_snippet + html_content + footer_snippet
 
     with open("public_html/finance/sentiment/index.html", "w") as f:
         f.write(html)
@@ -174,4 +185,5 @@ def main(debug=False):
 
 
 if __name__ == "__main__":
-    main(debug=False)
+    # main(debug=False)
+    generate_sentiment_html()

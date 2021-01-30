@@ -30,6 +30,10 @@ footer, #timestamp {
     font-size: 0.75em;
 }
 
+#timestamp {
+    margin: 1em 2em 2em 2em;
+}
+
 #container {
     text-align: center;
     padding: 0.5em;
@@ -112,6 +116,12 @@ tbody td {
 
 a {
     color: #3dc661;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #9be9b0;
+
 }
 
 nav a {
@@ -131,4 +141,17 @@ footer {
 
 h2 {
     margin-top: 1em;
+}
+
+#description {
+    background: #222222;
+    width: 60%;
+    margin: 0 auto;
+    padding: 1em;
+    text-align: left;
+}
+
+#description p {
+    line-height: 1.4em;
+    margin: 0.5em;
 }

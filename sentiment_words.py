@@ -76,8 +76,8 @@ def analyse_sentiment(debug=False):
         line_list = [s for s in [s.strip() for s in regex.sub('', line).split(" ")] if
                      s.isupper() and s in all_symbols and s not in words_blacklist]
         if line_list:
-            if "TDA" in line_list:
-                print(line)
+            # if "" in line_list:
+            #     print(line)
             line_set = set(line_list)
             stripped_headlines.append(line_set)
             word_list += line_list
