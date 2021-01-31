@@ -144,14 +144,21 @@ h2 {
 }
 
 #description {
-    background: #222222;
-    width: 55%;
+    background: #222;
+    width: 60%;
+    max-width: 960px;
     margin: 0 auto;
-    padding: 1em;
+    padding: 1.5em;
     text-align: left;
 }
 
 #description p {
     line-height: 1.4em;
     margin: 0.5em;
+}
+
+@media only screen and (max-width: 720px) {
+    #description {
+        width: 100%;
+    }
 }
