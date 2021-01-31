@@ -2,24 +2,28 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
+    <meta name="description" content="Tracks popular stocks on the WallStreetBets sub-reddit">
+    <meta name="keywords" content="wallstreetbets reddit sentiment tracker gme gamestop pltr palantir tsla tesla bb blackberry nok nokia nio amc short queeze interest popular wsb">
 <meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/>
 <meta content="no-cache" http-equiv="Pragma"/>
 <meta content="0" http-equiv="Expires"/>
-<title>Reddit stock sentiment tracker</title>
+<title>WallStreetBets stock tracker</title>
 <link href="../res/css/style.css" rel="stylesheet"/>
 </head>
 <body>
 <div id="container">
 <header>
-<h1>Reddit stock sentiment tracker</h1>
+<h1>WallStreetBets stock tracker</h1>
 <p id="timestamp"></p>
 <div id="description">
-<p>This website scans Reddit posts on <a href="https://www.reddit.com/r/wallstreetbets/" title="r/wallstreetbets">Wallstreetbets</a> to track how many times stock tickers are mentioned and the sentiment.
-                    </p>
-    <p>Graphs are updated at midday New Zealand time.
+<p>This website scans Reddit posts on <a href="https://www.reddit.com/r/wallstreetbets/" title="r/wallstreetbets">WallStreetBets</a> to track how many times stock tickers are mentioned and the sentiment.
+                    The website is currently set to collect the newest posts every 30 minutes. </p>
+    <p>All frequency is measured by percentage of posts that mention the stock out of all new posts, and is plotted logarithmically.
+        A python library called nltk is used to determine the sentiment of posts that mention a stock, and gives number between 1 and -1, with one being very positive and -1 being very negative. Neutral sentiment (values between 0.3 and -0.3) are ignored.</p>
+<p>Graphs are updated at midday New Zealand time.
                     All times are currently displayed in New Zealand time.</p>
-    <p>Some text displayed may be mistaken for stock tickers.</p>
-<p>The information contained on this website is not intended as, and should not be construed as financial advice. Use at your own risk.</p>
+<p>Some text displayed may be mistaken for stock tickers. Be aware that bots are included in the data.</p>
+<p>The information contained on this website is not intended as, and should not be construed as financial advice.</p>
 </div>
 </header>
 <div class="imgbox"><img alt="Sentiment scatter plot" class="center-fit" src="../res/img/sentiment/sentiment/sentiment_daily_scatter_plot.png"/></div>
