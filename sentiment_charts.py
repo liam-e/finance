@@ -70,9 +70,9 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=5, scatter_stocks_c
 
     # ----------- FREQUENCY -----------
     plot_sentiment(df_freqency, value_type="frequency", plot_type="daily", dpi=dpi,
-                   simple_labels=simple_labels)
+                   stocks_count=stocks_count, simple_labels=simple_labels)
     plot_sentiment(df_freqency, value_type="frequency", plot_type="weekly", dpi=dpi,
-                   simple_labels=simple_labels)
+                   stocks_count=stocks_count, simple_labels=simple_labels)
     # plot_sentiment(df_freqency, value_type="frequency", plot_type="hourly", dpi=dpi,
     #                simple_labels=simple_labels)
     # plot_sentiment(df_freqency, value_type="frequency", plot_type="timeseries", dpi=dpi,
@@ -84,14 +84,16 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=5, scatter_stocks_c
     df_sentiment = df[sentiment_cols]
     df_sentiment.columns = [s.split("_")[0] for s in sentiment_cols]
 
-    plot_sentiment(df_sentiment, value_type="sentiment", plot_type="daily", dpi=dpi, simple_labels=simple_labels)
+    plot_sentiment(df_sentiment, value_type="sentiment", plot_type="daily", dpi=dpi,
+			stocks_count=stocks_count, simple_labels=simple_labels)
 
     sentiment_cols = [col for col in df.columns if
                       col.endswith("sentiment") and col.split("_")[0] in most_frequent_weekly]
     df_sentiment = df[sentiment_cols]
     df_sentiment.columns = [s.split("_")[0] for s in sentiment_cols]
 
-    plot_sentiment(df_sentiment, value_type="sentiment", plot_type="weekly", dpi=dpi, simple_labels=simple_labels)
+    plot_sentiment(df_sentiment, value_type="sentiment", plot_type="weekly", dpi=dpi,
+			stocks_count=stocks_count, simple_labels=simple_labels)
 
     # sentiment_cols = [col for col in df.columns if
     #                   col.endswith("sentiment") and col.split("_")[0] in most_frequent_hourly]
@@ -148,14 +150,20 @@ def plot_sentiment_charts(dpi=150, debug=False, stocks_count=5, scatter_stocks_c
             label_positions.append([row["log_frequency"], row["sentiment"] - 0.03])
         else:
             label_positions.append([row["log_frequency"], row["sentiment"]])
-
+    
     for i, row in df.iterrows():
-        plt.annotate(
-            row["symbol"],
-            (label_positions[i][0], label_positions[i][1]),
-            fontsize=12,
-            color="white"
-        )
+        try:
+            plt.annotate(
+                row["symbol"],
+                (label_positions[i][0], label_positions[i][1]),
+                fontsize=12,
+                color="white"
+            )
+        except IndexError:
+            print("Dang!")
+            print(i, len(label_positions))
+            if i < len(label_positions):
+                print(label_positions[i])
 
     plt.title(f"Scatter plot - daily - updated at {now.strftime(date_format)}")
     plt.xlabel("Relative frequency (logarithmic)")
@@ -342,7 +350,7 @@ def main(debug=False):
     finance_logger.setup_log_script(script_name)
 
     try:
-        plot_sentiment_charts(debug=debug)
+        plot_sentiment_charts(debug=debug, stocks_count=8)
         finance_logger.append_log("success", script_name=script_name)
         finance_logger.log_time_taken(time() - start, script_name)
     except:

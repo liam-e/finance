@@ -130,7 +130,7 @@ dmypy.json
 
 .idea/
 old/
-data/**/*.csv
 data/**/*.json
+data/**/*.csv
 data/sentiment/auth.txt
 *.png
