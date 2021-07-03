@@ -133,4 +133,5 @@ old/
 data/**/*.json
 data/**/*.csv
 data/sentiment/auth.txt
+data/sentiment/words_blacklist.txt
 *.png
